@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeu en étapes</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --soft: #f1f4f8;
+      --text: #121722;
+      --muted: #607086;
+      --line: #dce3ec;
+      --purple: #6d4be8;
+      --purple-dark: #5835cf;
+      --green: #11825d;
+      --blue: #2563eb;
+      --red: #c0262d;
+      --radius: 8px;
+      --shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, textarea, select { font: inherit; }
+
+    .app {
+      width: min(1180px, calc(100vw - 28px));
+      margin: 20px auto 32px;
+      display: grid;
+      gap: 14px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 15px; }
+
+    .muted { color: var(--muted); line-height: 1.45; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, .link-button {
+      min-height: 38px;
+      border: 0;
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      background: var(--purple);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    button:hover, .link-button:hover { background: var(--purple-dark); }
+    button.secondary, .link-button.secondary { background: var(--soft); color: var(--text); border: 1px solid var(--line); }
+    button.secondary:hover, .link-button.secondary:hover { background: #e8edf5; }
+    button.green { background: var(--green); }
+    button.blue { background: var(--blue); }
+    button.red { background: var(--red); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .stack { display: grid; gap: 12px; }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #2d3440;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    textarea { min-height: 130px; resize: vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(109, 75, 232, 0.14);
+    }
+
+    .table-card, .choice, .competency, .plan-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      padding: 12px;
+    }
+
+    .table-card {
+      display: grid;
+      gap: 9px;
+    }
+
+    .table-card.active {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 2px rgba(109, 75, 232, 0.13);
+    }
+
+    .table-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      width: max-content;
+      max-width: 100%;
+      border-radius: 999px;
+      padding: 4px 8px;
+      background: #ede9fe;
+      color: #5534c9;
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .ok { color: var(--green); font-weight: 800; }
+    .warn { color: #b45309; font-weight: 800; }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .step-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 9px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 9px;
+      background: #fff;
+    }
+
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #e5e7eb;
+      color: #374151;
+      font-weight: 900;
+      font-size: 12px;
+    }
+
+    .step-item.active .step-number { background: var(--purple); color: #fff; }
+    .step-item.done .step-number { background: var(--green); color: #fff; }
+
+    .choices, .competencies, .plans {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice, .competency, .plan-card {
+      cursor: pointer;
+    }
+
+    .choice.selected, .competency.selected, .plan-card.selected {
+      border-color: var(--purple);
+      background: #f5f2ff;
+      box-shadow: 0 0 0 2px rgba(109, 75, 232, 0.13);
+    }
+
+    .competencies {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .kind {
+      display: inline-block;
+      margin-bottom: 5px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .hidden { display: none; }
+    .status { min-height: 20px; color: var(--muted); }
+    .status.error { color: var(--red); font-weight: 800; }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .competencies { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>Jeu en étapes</h1>
+        <p class="muted">Le maître crée les tables, suit les réponses et débloque les étapes successives.</p>
+      </div>
+      <nav class="tabs">
+        <button class="secondary" id="masterBtn" type="button">Maître du jeu</button>
+        <button class="secondary" id="playerBtn" type="button">Joueur</button>
+      </nav>
+    </header>
+
+    <section class="grid">
+      <aside class="panel stack" id="masterPanel">
+        <h2>Maître du jeu</h2>
+        <form class="stack" id="createTablesForm">
+          <label>
+            Nombre de tables
+            <input id="tableCount" type="number" min="1" max="20" value="3" required>
+          </label>
+          <button class="blue" type="submit">Créer les tables</button>
+        </form>
+
+        <div class="steps">
+          <h3>Déblocage</h3>
+          <button class="green" data-unlock="1" type="button">Débloquer étape 1</button>
+          <button class="green" data-unlock="2" type="button">Débloquer étape 2</button>
+          <button class="green" data-unlock="3" type="button">Débloquer étape 3</button>
+        </div>
+
+        <div class="steps">
+          <h3>Étapes</h3>
+          <div class="step-item" data-step-line="1"><span class="step-number">1</span><span>Découvrir la situation</span></div>
+          <div class="step-item" data-step-line="2"><span class="step-number">2</span><span>Mobiliser les compétences</span></div>
+          <div class="step-item" data-step-line="3"><span class="step-number">3</span><span>Plan d'action et réponse</span></div>
+        </div>
+        <p class="status" id="masterStatus"></p>
+      </aside>
+
+      <section class="panel stack">
+        <div class="table-row">
+          <div>
+            <h2 id="mainTitle">Tables de jeu</h2>
+            <p class="muted" id="mainSubtitle">Sélectionne une table pour répondre.</p>
+          </div>
+          <select id="tableSelect" aria-label="Table"></select>
+        </div>
+
+        <div class="stack" id="playerView">
+          <section class="stack" id="step1">
+            <h2>Étape 1 - Situation</h2>
+            <div class="panel">
+              <h3>Situation</h3>
+              <p class="muted">Une équipe doit organiser une réponse face à une situation complexe. Les informations sont partielles, les contraintes changent vite, et plusieurs acteurs doivent coopérer.</p>
+            </div>
+            <h3>D'après vous, quels sont les éléments importants ?</h3>
+            <div class="choices" id="step1Choices"></div>
+            <button class="blue" id="saveStep1" type="button">Valider la réponse</button>
+          </section>
+
+          <section class="stack hidden" id="step2">
+            <h2>Étape 2 - Compétences</h2>
+            <p class="muted" id="selectedChoiceText"></p>
+            <h3>Quelles compétences mobiliser ? Sélectionnez exactement <span id="requiredCount">3</span> compétence(s).</h3>
+            <div class="competencies" id="competenciesList"></div>
+            <button class="blue" id="saveStep2" type="button">Valider les compétences</button>
+          </section>
+
+          <section class="stack hidden" id="step3">
+            <h2>Étape 3 - Plan d'action</h2>
+            <p class="muted">Trois propositions sont générées à partir du choix de l'étape 1 et des compétences sélectionnées.</p>
+            <div class="plans" id="plansList"></div>
+            <label>
+              Votre réponse finale
+              <textarea id="finalPlan" placeholder="Adaptez ou rédigez votre plan d'action..."></textarea>
+            </label>
+            <button class="green" id="saveStep3" type="button">Envoyer la réponse</button>
+          </section>
+        </div>
+        <p class="status" id="playerStatus"></p>
+      </section>
+
+      <aside class="panel stack">
+        <h2>Suivi</h2>
+        <div id="tablesList" class="stack"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const SUPABASE_URL = "https://lwydkmmscheyfbkakbmf.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_OXzFUUHdq_VYLXA_EE5ZsQ__7wGL60k";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const step1Options = [
+      "Clarifier les besoins prioritaires et les risques immédiats",
+      "Identifier uniquement les ressources matérielles disponibles",
+      "Reporter la décision pour obtenir toutes les informations"
+    ];
+
+    const competencies = [
+      { name: "Écoute active", kind: "Sans IA" },
+      { name: "Analyse de la situation", kind: "Sans IA" },
+      { name: "Travail en réseau", kind: "Sans IA" },
+      { name: "Recherche d'informations avec IA", kind: "Avec IA" },
+      { name: "Synthèse assistée par IA", kind: "Avec IA" },
+      { name: "Aide à la rédaction avec IA", kind: "Avec IA" }
+    ];
+
+    const requiredCompetencies = 3;
+    let tables = [];
+    let responses = [];
+    let selectedTableId = "";
+    let selectedCompetencies = [];
+
+    const tableSelect = document.querySelector("#tableSelect");
+    const tablesList = document.querySelector("#tablesList");
+    const step1Choices = document.querySelector("#step1Choices");
+    const competenciesList = document.querySelector("#competenciesList");
+    const plansList = document.querySelector("#plansList");
+    const playerStatus = document.querySelector("#playerStatus");
+    const masterStatus = document.querySelector("#masterStatus");
+
+    document.querySelector("#requiredCount").textContent = requiredCompetencies;
+
+    document.querySelector("#createTablesForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const count = Number(document.querySelector("#tableCount").value);
+      const rows = Array.from({ length: count }, (_, index) => ({
+        table_name: `Table ${index + 1}`,
+        current_step: 1
+      }));
+
+      const { error } = await supabase.from("game_tables").upsert(rows, { onConflict: "table_name" });
+      if (error) return setMasterStatus("Impossible de créer les tables.", true);
+      await refresh();
+      setMasterStatus(`${count} table(s) prête(s).`);
+    });
+
+    document.querySelectorAll("[data-unlock]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        if (!selectedTableId) return setMasterStatus("Sélectionne une table.", true);
+        const step = Number(button.dataset.unlock);
+        const { error } = await supabase.from("game_tables").update({ current_step: step }).eq("id", selectedTableId);
+        if (error) return setMasterStatus("Impossible de débloquer l'étape.", true);
+        await refresh();
+        setMasterStatus(`Étape ${step} débloquée.`);
+      });
+    });
+
+    tableSelect.addEventListener("change", () => {
+      selectedTableId = tableSelect.value;
+      render();
+    });
+
+    document.querySelector("#saveStep1").addEventListener("click", async () => {
+      const selected = document.querySelector(".choice.selected")?.dataset.value;
+      if (!selected) return setPlayerStatus("Choisis une réponse.", true);
+      const { error } = await upsertResponse({ step1_choice: selected });
+      if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 1.", true);
+      await refresh();
+      setPlayerStatus("Étape 1 enregistrée. Attendez le maître du jeu pour l'étape 2.");
+    });
+
+    document.querySelector("#saveStep2").addEventListener("click", async () => {
+      if (selectedCompetencies.length !== requiredCompetencies) {
+        return setPlayerStatus(`Sélectionne exactement ${requiredCompetencies} compétences.`, true);
+      }
+      const { error } = await upsertResponse({ step2_competencies: selectedCompetencies });
+      if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 2.", true);
+      await refresh();
+      setPlayerStatus("Compétences enregistrées. Attendez le maître du jeu pour l'étape 3.");
+    });
+
+    document.querySelector("#saveStep3").addEventListener("click", async () => {
+      const plan = document.querySelector("#finalPlan").value.trim();
+      if (!plan) return setPlayerStatus("Rédige ou choisis un plan d'action.", true);
+      const generated = getGeneratedPlans();
+      const { error } = await upsertResponse({ step3_plan: plan, generated_plans: generated });
+      if (error) return setPlayerStatus("Impossible d'enregistrer le plan.", true);
+      await refresh();
+      setPlayerStatus("Réponse finale enregistrée.");
+    });
+
+    function renderStaticChoices() {
+      step1Choices.innerHTML = "";
+      step1Options.forEach((option) => {
+        const item = document.createElement("article");
+        item.className = "choice";
+        item.dataset.value = option;
+        item.textContent = option;
+        item.addEventListener("click", () => {
+          document.querySelectorAll(".choice").forEach((node) => node.classList.remove("selected"));
+          item.classList.add("selected");
+        });
+        step1Choices.append(item);
+      });
+
+      competenciesList.innerHTML = "";
+      competencies.forEach((competency) => {
+        const item = document.createElement("article");
+        item.className = "competency";
+        item.dataset.value = competency.name;
+        item.innerHTML = `<span class="kind"></span><strong></strong>`;
+        item.querySelector(".kind").textContent = competency.kind;
+        item.querySelector("strong").textContent = competency.name;
+        item.addEventListener("click", () => toggleCompetency(competency.name, item));
+        competenciesList.append(item);
+      });
+    }
+
+    function toggleCompetency(name, item) {
+      if (selectedCompetencies.includes(name)) {
+        selectedCompetencies = selectedCompetencies.filter((value) => value !== name);
+        item.classList.remove("selected");
+        return;
+      }
+      if (selectedCompetencies.length >= requiredCompetencies) return setPlayerStatus(`Maximum ${requiredCompetencies} compétences.`, true);
+      selectedCompetencies.push(name);
+      item.classList.add("selected");
+    }
+
+    async function upsertResponse(values) {
+      return supabase
+        .from("game_responses")
+        .upsert({ table_id: selectedTableId, ...values }, { onConflict: "table_id" });
+    }
+
+    async function refresh() {
+      const tablesResult = await supabase.from("game_tables").select("*").order("table_name", { ascending: true });
+      const responsesResult = await supabase.from("game_responses").select("*");
+      if (tablesResult.error || responsesResult.error) {
+        setPlayerStatus("Connexion Supabase impossible. Exécute le SQL du fichier supabase-schema.sql.", true);
+        return;
+      }
+      tables = tablesResult.data || [];
+      responses = responsesResult.data || [];
+      if (!selectedTableId && tables.length) selectedTableId = tables[0].id;
+      render();
+    }
+
+    function render() {
+      renderTables();
+      renderCurrentTable();
+    }
+
+    function renderTables() {
+      tableSelect.innerHTML = "";
+      tablesList.innerHTML = "";
+      tables.forEach((table) => {
+        const option = document.createElement("option");
+        option.value = table.id;
+        option.textContent = table.table_name;
+        option.selected = table.id === selectedTableId;
+        tableSelect.append(option);
+
+        const response = getResponse(table.id);
+        const card = document.createElement("article");
+        card.className = "table-card";
+        if (table.id === selectedTableId) card.classList.add("active");
+        card.innerHTML = `
+          <div class="table-row"><strong></strong><span class="badge"></span></div>
+          <p class="muted"></p>
+          <button class="secondary" type="button">Sélectionner</button>
+        `;
+        card.querySelector("strong").textContent = table.table_name;
+        card.querySelector(".badge").textContent = `Étape ${table.current_step}`;
+        card.querySelector("p").innerHTML = statusFor(response);
+        card.querySelector("button").addEventListener("click", () => {
+          selectedTableId = table.id;
+          render();
+        });
+        tablesList.append(card);
+      });
+    }
+
+    function renderCurrentTable() {
+      const table = getSelectedTable();
+      const response = getSelectedResponse();
+      if (!table) return;
+
+      document.querySelector("#mainTitle").textContent = table.table_name;
+      document.querySelectorAll("[data-step-line]").forEach((line) => {
+        const step = Number(line.dataset.stepLine);
+        line.classList.toggle("active", table.current_step === step);
+        line.classList.toggle("done", table.current_step > step);
+      });
+
+      document.querySelector("#step1").classList.toggle("hidden", table.current_step !== 1);
+      document.querySelector("#step2").classList.toggle("hidden", table.current_step !== 2);
+      document.querySelector("#step3").classList.toggle("hidden", table.current_step !== 3);
+
+      document.querySelectorAll(".choice").forEach((item) => {
+        item.classList.toggle("selected", item.dataset.value === response?.step1_choice);
+      });
+
+      selectedCompetencies = response?.step2_competencies || [];
+      document.querySelectorAll(".competency").forEach((item) => {
+        item.classList.toggle("selected", selectedCompetencies.includes(item.dataset.value));
+      });
+
+      document.querySelector("#selectedChoiceText").textContent = response?.step1_choice
+        ? `Choix retenu : ${response.step1_choice}`
+        : "Commencez par valider l'étape 1.";
+
+      renderPlans();
+      document.querySelector("#finalPlan").value = response?.step3_plan || "";
+    }
+
+    function renderPlans() {
+      plansList.innerHTML = "";
+      getGeneratedPlans().forEach((plan) => {
+        const card = document.createElement("article");
+        card.className = "plan-card";
+        card.textContent = plan;
+        card.addEventListener("click", () => {
+          document.querySelectorAll(".plan-card").forEach((node) => node.classList.remove("selected"));
+          card.classList.add("selected");
+          document.querySelector("#finalPlan").value = plan;
+        });
+        plansList.append(card);
+      });
+    }
+
+    function getGeneratedPlans() {
+      const response = getSelectedResponse();
+      const choice = response?.step1_choice || "les éléments importants identifiés";
+      const skills = (response?.step2_competencies || []).join(", ") || "les compétences sélectionnées";
+      return [
+        `Plan 1 : prioriser ${choice}, mobiliser ${skills}, puis organiser une première action courte et mesurable.`,
+        `Plan 2 : répartir les rôles autour de ${skills}, vérifier les risques liés à ${choice}, puis décider d'une action commune.`,
+        `Plan 3 : comparer les options possibles, utiliser ${skills}, formaliser une réponse et prévoir un point de suivi.`
+      ];
+    }
+
+    function getSelectedTable() {
+      return tables.find((table) => table.id === selectedTableId);
+    }
+
+    function getSelectedResponse() {
+      return responses.find((response) => response.table_id === selectedTableId);
+    }
+
+    function getResponse(tableId) {
+      return responses.find((response) => response.table_id === tableId);
+    }
+
+    function statusFor(response) {
+      if (!response) return '<span class="warn">Aucune réponse</span>';
+      const parts = [
+        response.step1_choice ? '<span class="ok">Étape 1 ok</span>' : '<span class="warn">Étape 1 vide</span>',
+        response.step2_competencies?.length ? '<span class="ok">Étape 2 ok</span>' : '<span class="warn">Étape 2 vide</span>',
+        response.step3_plan ? '<span class="ok">Étape 3 ok</span>' : '<span class="warn">Étape 3 vide</span>'
+      ];
+      return parts.join(" · ");
+    }
+
+    function setPlayerStatus(message, isError = false) {
+      playerStatus.textContent = message;
+      playerStatus.classList.toggle("error", isError);
+    }
+
+    function setMasterStatus(message, isError = false) {
+      masterStatus.textContent = message;
+      masterStatus.classList.toggle("error", isError);
+    }
+
+    renderStaticChoices();
+    await refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>

@@ -758,7 +758,17 @@
     function renderCurrentTable() {
       const table = getSelectedTable();
       const response = getSelectedResponse();
-      if (!table) return;
+      if (!table) {
+        renderEmptyMasterSteps();
+        document.querySelector("#mainTitle").textContent = "Tables de jeu";
+        document.querySelector("#mainSubtitle").textContent = "Crée des tables pour démarrer.";
+        document.querySelector("#step1").classList.add("hidden");
+        document.querySelector("#step2").classList.add("hidden");
+        document.querySelector("#step3").classList.add("hidden");
+        document.querySelector("#step4").classList.add("hidden");
+        playerStepTabs.innerHTML = "";
+        return;
+      }
       visibleStep = Math.min(Math.max(visibleStep, 1), table.current_step);
 
       document.querySelector("#mainTitle").textContent = table.table_name;
@@ -807,6 +817,17 @@
       renderPlans();
       renderSummary();
       document.querySelector("#finalPlan").value = response?.step3_plan || "";
+    }
+
+    function renderEmptyMasterSteps() {
+      document.querySelectorAll("[data-master-step]").forEach((line) => {
+        const step = Number(line.dataset.masterStep);
+        line.classList.toggle("active", step === 1);
+        line.classList.toggle("done", false);
+        line.classList.toggle("next", false);
+        line.classList.toggle("future", step > 1);
+        line.disabled = step > 1;
+      });
     }
 
     function renderPlayerStepTabs(currentStep) {

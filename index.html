@@ -156,6 +156,12 @@
       gap: 8px;
     }
 
+    .table-name-input {
+      min-height: 32px;
+      padding: 5px 7px;
+      font-weight: 800;
+    }
+
     .badge {
       width: max-content;
       max-width: 100%;
@@ -185,6 +191,39 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 10px;
+    }
+
+    .step-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .step-tab {
+      min-height: 42px;
+      background: var(--soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+      justify-content: flex-start;
+      text-align: left;
+    }
+
+    .step-tab.active {
+      background: #ede9fe;
+      color: #5534c9;
+      border-color: var(--purple);
+    }
+
+    .step-tab.done {
+      background: #e8f7f1;
+      color: var(--green);
+      border-color: #b7ead7;
+    }
+
+    .step-item:disabled,
+    .step-tab:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .step-item {
@@ -307,19 +346,17 @@
         </form>
 
         <div class="steps">
-          <h3>Déblocage</h3>
-          <button class="green" data-unlock="1" type="button">Débloquer étape 1</button>
-          <button class="green" data-unlock="2" type="button">Débloquer étape 2</button>
-          <button class="green" data-unlock="3" type="button">Débloquer étape 3</button>
-          <button class="green" data-unlock="4" type="button">Débloquer bilan</button>
+          <h3>Avancement</h3>
+          <button class="secondary" id="masterPreviousStep" type="button">Étape précédente</button>
+          <button class="green" id="masterNextStep" type="button">Étape suivante</button>
         </div>
 
         <div class="steps">
           <h3>Étapes</h3>
-          <div class="step-item" data-step-line="1"><span class="step-number">1</span><span>Découvrir la situation</span></div>
-          <div class="step-item" data-step-line="2"><span class="step-number">2</span><span>Mobiliser les compétences</span></div>
-          <div class="step-item" data-step-line="3"><span class="step-number">3</span><span>Plan d'action et réponse</span></div>
-          <div class="step-item" data-step-line="4"><span class="step-number">4</span><span>Bilan des réponses</span></div>
+          <button class="step-item" data-master-step="1" type="button"><span class="step-number">1</span><span>Découvrir la situation</span></button>
+          <button class="step-item" data-master-step="2" type="button"><span class="step-number">2</span><span>Mobiliser les compétences</span></button>
+          <button class="step-item" data-master-step="3" type="button"><span class="step-number">3</span><span>Plan d'action et réponse</span></button>
+          <button class="step-item" data-master-step="4" type="button"><span class="step-number">4</span><span>Bilan des réponses</span></button>
         </div>
         <p class="status" id="masterStatus"></p>
       </aside>
@@ -339,6 +376,7 @@
             <span class="badge" id="visibleStepLabel">Étape 1/4</span>
             <button class="secondary" id="nextStepBtn" type="button">Étape suivante</button>
           </div>
+          <div class="step-tabs" id="playerStepTabs"></div>
 
           <section class="stack" id="step1">
             <h2>Étape 1 - Situation</h2>
@@ -399,6 +437,8 @@
       "Reporter la décision pour obtenir toutes les informations"
     ];
 
+    const initialSituation = "Une équipe doit organiser une réponse face à une situation complexe. Les informations sont partielles, les contraintes changent vite, et plusieurs acteurs doivent coopérer.";
+
     const competencies = [
       { name: "Écoute active", kind: "Sans IA" },
       { name: "Analyse de la situation", kind: "Sans IA" },
@@ -428,6 +468,16 @@
     const previousStepBtn = document.querySelector("#previousStepBtn");
     const nextStepBtn = document.querySelector("#nextStepBtn");
     const visibleStepLabel = document.querySelector("#visibleStepLabel");
+    const playerStepTabs = document.querySelector("#playerStepTabs");
+    const saveStep1Btn = document.querySelector("#saveStep1");
+    const saveStep2Btn = document.querySelector("#saveStep2");
+    const saveStep3Btn = document.querySelector("#saveStep3");
+    const stepLabels = [
+      "Situation",
+      "Compétences",
+      "Plan d'action",
+      "Bilan"
+    ];
 
     document.querySelector("#requiredCount").textContent = requiredCompetencies;
 
@@ -461,14 +511,21 @@
       setMasterStatus(`${tableName} ajoutée.`);
     });
 
-    document.querySelectorAll("[data-unlock]").forEach((button) => {
+    document.querySelector("#masterPreviousStep").addEventListener("click", async () => {
+      const table = getSelectedTable();
+      if (!table) return setMasterStatus("Sélectionne une table.", true);
+      await setTableStep(Math.max(1, table.current_step - 1));
+    });
+
+    document.querySelector("#masterNextStep").addEventListener("click", async () => {
+      const table = getSelectedTable();
+      if (!table) return setMasterStatus("Sélectionne une table.", true);
+      await setTableStep(Math.min(4, table.current_step + 1));
+    });
+
+    document.querySelectorAll("[data-master-step]").forEach((button) => {
       button.addEventListener("click", async () => {
-        if (!selectedTableId) return setMasterStatus("Sélectionne une table.", true);
-        const step = Number(button.dataset.unlock);
-        const { error } = await supabase.from("game_tables").update({ current_step: step }).eq("id", selectedTableId);
-        if (error) return setMasterStatus("Impossible de débloquer l'étape.", true);
-        await refresh();
-        setMasterStatus(`Étape ${step} débloquée.`);
+        await setTableStep(Number(button.dataset.masterStep));
       });
     });
 
@@ -486,6 +543,13 @@
     nextStepBtn.addEventListener("click", () => {
       const table = getSelectedTable();
       visibleStep = Math.min(table?.current_step || 1, visibleStep + 1);
+      render();
+    });
+
+    playerStepTabs.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-player-step]");
+      if (!button || button.disabled) return;
+      visibleStep = Number(button.dataset.playerStep);
       render();
     });
 
@@ -562,6 +626,19 @@
         .upsert({ table_id: selectedTableId, ...values }, { onConflict: "table_id" });
     }
 
+    async function setTableStep(step) {
+      if (!selectedTableId) return setMasterStatus("Sélectionne une table.", true);
+      const { error } = await supabase
+        .from("game_tables")
+        .update({ current_step: step })
+        .eq("id", selectedTableId);
+
+      if (error) return setMasterStatus("Impossible de changer d'étape.", true);
+      visibleStep = step;
+      await refresh();
+      setMasterStatus(`${stepLabels[step - 1]} disponible.`);
+    }
+
     async function refresh() {
       const tablesResult = await supabase.from("game_tables").select("*").order("table_name", { ascending: true });
       const responsesResult = await supabase.from("game_responses").select("*");
@@ -598,20 +675,16 @@
         card.className = "table-card";
         if (table.id === selectedTableId) card.classList.add("active");
         card.innerHTML = `
-          <div class="table-row"><strong></strong><span class="badge"></span></div>
+          <div class="table-row"><input class="table-name-input" aria-label="Nom de table"><span class="badge"></span></div>
           <p class="muted"></p>
           <button class="secondary" type="button">Sélectionner</button>
           <button class="secondary player-link" type="button">Copier le lien joueur</button>
-          <div class="mini-actions">
-            <input data-rename-input value="">
-            <button class="secondary" data-rename type="button">Renommer</button>
-          </div>
           <button class="red" data-delete type="button">Supprimer la table</button>
         `;
-        card.querySelector("strong").textContent = table.table_name;
+        const nameInput = card.querySelector(".table-name-input");
+        nameInput.value = table.table_name;
         card.querySelector(".badge").textContent = `Étape ${table.current_step}`;
         card.querySelector("p").innerHTML = statusFor(response);
-        card.querySelector("[data-rename-input]").value = table.table_name;
         card.querySelector("button").addEventListener("click", () => {
           selectedTableId = table.id;
           visibleStep = table.current_step;
@@ -622,17 +695,13 @@
           await copyText(getTableUrl(table.table_name));
           setMasterStatus(`Lien joueur copié pour ${table.table_name}.`);
         });
-        card.querySelector("[data-rename]").addEventListener("click", async () => {
-          const nextName = card.querySelector("[data-rename-input]").value.trim();
-          if (!nextName) return setMasterStatus("Le nom de table ne peut pas être vide.", true);
-          const { error } = await supabase
-            .from("game_tables")
-            .update({ table_name: nextName })
-            .eq("id", table.id);
-          if (error) return setMasterStatus("Impossible de renommer cette table. Le nom existe peut-être déjà.", true);
-          selectedTableId = table.id;
-          await refresh();
-          setMasterStatus("Table renommée.");
+        nameInput.addEventListener("keydown", async (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          await renameTable(table.id, nameInput.value);
+        });
+        nameInput.addEventListener("blur", () => {
+          nameInput.value = table.table_name;
         });
         card.querySelector("[data-delete]").addEventListener("click", async () => {
           if (!confirm(`Supprimer ${table.table_name} et toutes ses réponses ?`)) return;
@@ -649,6 +718,19 @@
       });
     }
 
+    async function renameTable(tableId, value) {
+      const nextName = value.trim();
+      if (!nextName) return setMasterStatus("Le nom de table ne peut pas être vide.", true);
+      const { error } = await supabase
+        .from("game_tables")
+        .update({ table_name: nextName })
+        .eq("id", tableId);
+      if (error) return setMasterStatus("Impossible de renommer cette table. Le nom existe peut-être déjà.", true);
+      selectedTableId = tableId;
+      await refresh();
+      setMasterStatus("Table renommée.");
+    }
+
     function renderCurrentTable() {
       const table = getSelectedTable();
       const response = getSelectedResponse();
@@ -659,10 +741,11 @@
       document.querySelector("#mainSubtitle").textContent = playerOnlyMode
         ? "Répondez à l'étape débloquée par le maître du jeu."
         : "Sélectionne une table pour répondre.";
-      document.querySelectorAll("[data-step-line]").forEach((line) => {
-        const step = Number(line.dataset.stepLine);
+      document.querySelectorAll("[data-master-step]").forEach((line) => {
+        const step = Number(line.dataset.masterStep);
         line.classList.toggle("active", table.current_step === step);
         line.classList.toggle("done", table.current_step > step);
+        line.disabled = step > table.current_step + 1;
       });
 
       playerStepNav.classList.toggle("hidden", !playerOnlyMode && table.current_step === 1);
@@ -674,6 +757,7 @@
       document.querySelector("#step2").classList.toggle("hidden", visibleStep !== 2);
       document.querySelector("#step3").classList.toggle("hidden", visibleStep !== 3);
       document.querySelector("#step4").classList.toggle("hidden", visibleStep !== 4);
+      renderPlayerStepTabs(table.current_step);
 
       document.querySelectorAll(".choice").forEach((item) => {
         item.classList.toggle("selected", item.dataset.value === response?.step1_choice);
@@ -688,15 +772,36 @@
         ? `Choix retenu : ${response.step1_choice}`
         : "Commencez par valider l'étape 1.";
 
+      saveStep1Btn.disabled = Boolean(response?.step1_choice) && table.current_step <= 1;
+      saveStep2Btn.disabled = Boolean(response?.step2_competencies?.length) && table.current_step <= 2;
+      saveStep3Btn.disabled = Boolean(response?.step3_plan) && table.current_step <= 3;
+
       renderPlans();
       renderSummary();
       document.querySelector("#finalPlan").value = response?.step3_plan || "";
+    }
+
+    function renderPlayerStepTabs(currentStep) {
+      playerStepTabs.innerHTML = "";
+      stepLabels.forEach((label, index) => {
+        const step = index + 1;
+        const button = document.createElement("button");
+        button.className = "step-tab";
+        button.type = "button";
+        button.dataset.playerStep = step;
+        button.textContent = `${step}. ${label}`;
+        button.disabled = step > currentStep;
+        button.classList.toggle("active", step === visibleStep);
+        button.classList.toggle("done", step < currentStep);
+        playerStepTabs.append(button);
+      });
     }
 
     function renderSummary() {
       summaryList.innerHTML = "";
       const response = getSelectedResponse();
       const rows = [
+        ["Situation initiale", initialSituation],
         ["Éléments importants", response?.step1_choice || "Non renseigné"],
         ["Compétences", response?.step2_competencies?.join(", ") || "Non renseigné"],
         ["Plan d'action final", response?.step3_plan || "Non renseigné"]
@@ -754,8 +859,9 @@
       const table = tables.find((item) => item.table_name === tableName);
       if (!table) return;
 
+      const isNewTableSelection = selectedTableId !== table.id;
       selectedTableId = table.id;
-      visibleStep = table.current_step;
+      if (isNewTableSelection) visibleStep = table.current_step;
       playerOnlyMode = true;
       document.body.classList.add("player-only");
     }

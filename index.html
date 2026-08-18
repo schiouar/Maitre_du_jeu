@@ -822,11 +822,11 @@
     function renderEmptyMasterSteps() {
       document.querySelectorAll("[data-master-step]").forEach((line) => {
         const step = Number(line.dataset.masterStep);
-        line.classList.toggle("active", step === 1);
+        line.classList.toggle("active", false);
         line.classList.toggle("done", false);
         line.classList.toggle("next", false);
-        line.classList.toggle("future", step > 1);
-        line.disabled = step > 1;
+        line.classList.toggle("future", true);
+        line.disabled = true;
       });
     }
 

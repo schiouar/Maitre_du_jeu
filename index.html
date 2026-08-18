@@ -253,12 +253,14 @@
       font-size: 12px;
     }
 
-    .step-item.active .step-number { background: var(--purple); color: #fff; }
+    .step-item.active .step-number { background: var(--green); color: #fff; }
     .step-item.done .step-number { background: var(--green); color: #fff; }
+    .step-item.next { border-color: var(--purple); background: #f5f2ff; color: #5534c9; }
+    .step-item.next .step-number { background: var(--purple); color: #fff; }
     .step-item.future { background: #f8fafc; color: #9aa4b2; }
     .step-item.future .step-number { background: #e5e7eb; color: #9aa4b2; }
     .step-item.done { border-color: #b7ead7; background: #f0fbf6; }
-    .step-item.active { border-color: var(--purple); background: #f5f2ff; }
+    .step-item.active { border-color: #b7ead7; background: #f0fbf6; }
 
     .choices, .competencies, .plans {
       display: grid;
@@ -322,6 +324,7 @@
 
     .status { min-height: 20px; color: var(--muted); }
     .status.error { color: var(--red); font-weight: 800; }
+    .status.waiting { color: #7c3aed; font-weight: 800; }
 
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
@@ -356,14 +359,6 @@
         <div class="steps">
           <h3>Réinitialisation</h3>
           <button class="red" id="resetGameBtn" type="button">Réinitialiser le jeu</button>
-        </div>
-
-        <div class="steps">
-          <h3>Étape</h3>
-          <button class="green" data-unlock-all="1" type="button">Débloquer étape 1</button>
-          <button class="green" data-unlock-all="2" type="button">Débloquer étape 2</button>
-          <button class="green" data-unlock-all="3" type="button">Débloquer étape 3</button>
-          <button class="green" data-unlock-all="4" type="button">Débloquer bilan</button>
         </div>
 
         <div class="steps">
@@ -470,6 +465,7 @@
     let selectedCompetencies = [];
     let playerOnlyMode = false;
     let visibleStep = 1;
+    let waitingForNextStep = false;
 
     const tableSelect = document.querySelector("#tableSelect");
     const tablesList = document.querySelector("#tablesList");
@@ -526,20 +522,18 @@
       setMasterStatus("Jeu réinitialisé.");
     });
 
-    document.querySelectorAll("[data-unlock-all]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        await unlockStepForAll(Number(button.dataset.unlockAll));
-      });
-    });
-
     document.querySelectorAll("[data-master-step]").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const table = getSelectedTable();
         if (!table) return;
         const step = Number(button.dataset.masterStep);
         if (step <= table.current_step) {
           visibleStep = step;
           render();
+          return;
+        }
+        if (step === table.current_step + 1) {
+          await unlockStepForAll(step);
         }
       });
     });
@@ -574,8 +568,9 @@
       if (!selected) return setPlayerStatus("Choisis une réponse.", true);
       const { error } = await upsertResponse({ step1_choice: selected });
       if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 1.", true);
+      waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Étape 1 enregistrée. Attendez le maître du jeu pour l'étape 2.");
+      setPlayerStatus("Étape 1 enregistrée. Attente du déblocage de l'étape 2...", false, true);
     });
 
     document.querySelector("#saveStep2").addEventListener("click", async () => {
@@ -585,8 +580,9 @@
       }
       const { error } = await upsertResponse({ step2_competencies: selectedCompetencies });
       if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 2.", true);
+      waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Compétences enregistrées. Attendez le maître du jeu pour l'étape 3.");
+      setPlayerStatus("Compétences enregistrées. Attente du déblocage de l'étape 3...", false, true);
     });
 
     document.querySelector("#saveStep3").addEventListener("click", async () => {
@@ -596,8 +592,9 @@
       const generated = getGeneratedPlans();
       const { error } = await upsertResponse({ step3_plan: plan, generated_plans: generated });
       if (error) return setPlayerStatus("Impossible d'enregistrer le plan.", true);
+      waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Réponse finale enregistrée. Le bilan sera disponible quand le maître le débloque.");
+      setPlayerStatus("Réponse finale enregistrée. Attente du déblocage du bilan...", false, true);
     });
 
     function renderStaticChoices() {
@@ -671,6 +668,11 @@
       if (!selectedTableId && tables.length) selectedTableId = tables[0].id;
       selectTableFromUrl();
       const table = getSelectedTable();
+      if (playerOnlyMode && waitingForNextStep && table && table.current_step > visibleStep) {
+        visibleStep = table.current_step;
+        waitingForNextStep = false;
+        setPlayerStatus(`${stepLabels[visibleStep - 1]} disponible.`);
+      }
       if (table) visibleStep = Math.min(Math.max(visibleStep, 1), table.current_step);
       render();
     }
@@ -767,15 +769,9 @@
         const step = Number(line.dataset.masterStep);
         line.classList.toggle("active", table.current_step === step);
         line.classList.toggle("done", table.current_step > step);
-        line.classList.toggle("future", table.current_step < step);
-        line.disabled = step > table.current_step;
-      });
-
-      document.querySelectorAll("[data-unlock-all]").forEach((button) => {
-        const step = Number(button.dataset.unlockAll);
-        button.classList.toggle("active", step === table.current_step);
-        button.classList.toggle("done", step < table.current_step);
-        button.classList.toggle("future", step > table.current_step);
+        line.classList.toggle("next", step === table.current_step + 1);
+        line.classList.toggle("future", step > table.current_step + 1);
+        line.disabled = step > table.current_step + 1;
       });
 
       playerStepNav.classList.toggle("hidden", !playerOnlyMode && table.current_step === 1);
@@ -947,9 +943,10 @@
       return parts.join(" · ");
     }
 
-    function setPlayerStatus(message, isError = false) {
+    function setPlayerStatus(message, isError = false, isWaiting = false) {
       playerStatus.textContent = message;
       playerStatus.classList.toggle("error", isError);
+      playerStatus.classList.toggle("waiting", isWaiting);
     }
 
     function setMasterStatus(message, isError = false) {

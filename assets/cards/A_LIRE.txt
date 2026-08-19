@@ -1,0 +1,16 @@
+Place ici les JPG complets du jeu avec leurs noms d'origine.
+
+Le prototype utilise directement ces fichiers quand ils existent :
+- CARTES_ALL-35.jpg : carte regle 1
+- CARTES_ALL-31.jpg : situation 1
+- CARTES_ALL-14.jpg : carte "Mobiliser les competences"
+- CARTES_ALL-02.jpg : competence collective
+- CARTES_ALL-01.jpg : competence collective face 1
+- CARTES_ALL-03.jpg : competence collective face 2
+- CARTES_ALL-05.jpg : competence individuelle
+- CARTES_ALL-09.jpg : competence I.A
+- CARTES_ALL-11.jpg : competence I.A
+- CARTES_ALL-26.jpg : carte ethique 1
+- CARTES_ALL-32.jpg : hypothese de travail 1
+
+Si un fichier manque, index.html affiche automatiquement l'ancien visuel de secours.

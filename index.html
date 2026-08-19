@@ -267,6 +267,20 @@
       gap: 10px;
     }
 
+    .overview-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .overview-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+    }
+
     .choice, .competency, .plan-card {
       cursor: pointer;
     }
@@ -377,6 +391,11 @@
         </div>
 
         <div class="stack" id="playerView">
+          <section class="stack hidden" id="masterOverview">
+            <h2>Vue d'ensemble de la table</h2>
+            <div class="overview-list" id="overviewList"></div>
+          </section>
+
           <div class="player-nav hidden" id="playerStepNav">
             <button class="secondary" id="previousStepBtn" type="button">Étape précédente</button>
             <span class="badge" id="visibleStepLabel">Étape 1/4</span>
@@ -468,6 +487,8 @@
     const step1Choices = document.querySelector("#step1Choices");
     const competenciesList = document.querySelector("#competenciesList");
     const plansList = document.querySelector("#plansList");
+    const masterOverview = document.querySelector("#masterOverview");
+    const overviewList = document.querySelector("#overviewList");
     const summaryList = document.querySelector("#summaryList");
     const playerStatus = document.querySelector("#playerStatus");
     const masterStatus = document.querySelector("#masterStatus");
@@ -547,7 +568,8 @@
 
     nextStepBtn.addEventListener("click", () => {
       const table = getSelectedTable();
-      visibleStep = Math.min(table?.current_step || 1, visibleStep + 1);
+      const response = getSelectedResponse();
+      visibleStep = Math.min(getAccessibleStep(table, response), visibleStep + 1);
       render();
     });
 
@@ -566,7 +588,7 @@
       if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 1.", true);
       waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Étape 1 enregistrée. Attente du déblocage de l'étape 2...", false, true);
+      if (visibleStep === 1) setPlayerStatus("Étape 1 enregistrée. Attente du déblocage de l'étape 2...", false, true);
     });
 
     document.querySelector("#saveStep2").addEventListener("click", async () => {
@@ -578,7 +600,7 @@
       if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 2.", true);
       waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Compétences enregistrées. Attente du déblocage de l'étape 3...", false, true);
+      if (visibleStep === 2) setPlayerStatus("Compétences enregistrées. Attente du déblocage de l'étape 3...", false, true);
     });
 
     document.querySelector("#saveStep3").addEventListener("click", async () => {
@@ -590,7 +612,7 @@
       if (error) return setPlayerStatus("Impossible d'enregistrer le plan.", true);
       waitingForNextStep = true;
       await refresh();
-      setPlayerStatus("Réponse finale enregistrée. Attente du déblocage du bilan...", false, true);
+      if (visibleStep === 3) setPlayerStatus("Réponse finale enregistrée. Attente du déblocage du bilan...", false, true);
     });
 
     function renderStaticChoices() {
@@ -664,12 +686,14 @@
       if (!selectedTableId && tables.length) selectedTableId = tables[0].id;
       selectTableFromUrl();
       const table = getSelectedTable();
-      if (playerOnlyMode && waitingForNextStep && table && table.current_step > visibleStep) {
-        visibleStep = table.current_step;
+      const response = getSelectedResponse();
+      const accessibleStep = getAccessibleStep(table, response);
+      if (playerOnlyMode && waitingForNextStep && accessibleStep > visibleStep) {
+        visibleStep = accessibleStep;
         waitingForNextStep = false;
         setPlayerStatus(`${stepLabels[visibleStep - 1]} disponible.`);
       }
-      if (table) visibleStep = Math.min(Math.max(visibleStep, 1), table.current_step);
+      if (table) visibleStep = Math.min(Math.max(visibleStep, 1), accessibleStep);
       render();
     }
 
@@ -765,12 +789,13 @@
         playerStepTabs.innerHTML = "";
         return;
       }
-      visibleStep = Math.min(Math.max(visibleStep, 1), table.current_step);
+      const accessibleStep = getAccessibleStep(table, response);
+      visibleStep = Math.min(Math.max(visibleStep, 1), playerOnlyMode ? accessibleStep : table.current_step);
 
       document.querySelector("#mainTitle").textContent = table.table_name;
       document.querySelector("#mainSubtitle").textContent = playerOnlyMode
         ? "Répondez à l'étape débloquée par le maître du jeu."
-        : "Sélectionne une table pour répondre.";
+        : "Vue d'ensemble des réponses de la table.";
       document.querySelectorAll("[data-master-step]").forEach((line) => {
         const step = Number(line.dataset.masterStep);
         line.classList.toggle("active", table.current_step === step);
@@ -780,16 +805,22 @@
         line.disabled = step > table.current_step + 1;
       });
 
-      playerStepNav.classList.toggle("hidden", !playerOnlyMode && table.current_step === 1);
+      if (!playerOnlyMode) {
+        renderMasterOverview(table, response);
+        return;
+      }
+
+      masterOverview.classList.add("hidden");
+      playerStepNav.classList.toggle("hidden", accessibleStep === 1);
       visibleStepLabel.textContent = `Étape ${visibleStep}/4`;
       previousStepBtn.disabled = visibleStep <= 1;
-      nextStepBtn.disabled = visibleStep >= table.current_step;
+      nextStepBtn.disabled = visibleStep >= accessibleStep;
 
       document.querySelector("#step1").classList.toggle("hidden", visibleStep !== 1);
       document.querySelector("#step2").classList.toggle("hidden", visibleStep !== 2);
       document.querySelector("#step3").classList.toggle("hidden", visibleStep !== 3);
       document.querySelector("#step4").classList.toggle("hidden", visibleStep !== 4);
-      renderPlayerStepTabs(table.current_step);
+      renderPlayerStepTabs(accessibleStep);
 
       document.querySelectorAll(".choice").forEach((item) => {
         item.classList.toggle("selected", item.dataset.value === response?.step1_choice);
@@ -805,14 +836,43 @@
         : "Commencez par valider l'étape 1.";
 
       const masterReadOnly = !playerOnlyMode;
-      saveStep1Btn.disabled = masterReadOnly || (Boolean(response?.step1_choice) && table.current_step <= 1);
-      saveStep2Btn.disabled = masterReadOnly || (Boolean(response?.step2_competencies?.length) && table.current_step <= 2);
-      saveStep3Btn.disabled = masterReadOnly || (Boolean(response?.step3_plan) && table.current_step <= 3);
+      saveStep1Btn.disabled = masterReadOnly || Boolean(response?.step1_choice);
+      saveStep2Btn.disabled = masterReadOnly || Boolean(response?.step2_competencies?.length);
+      saveStep3Btn.disabled = masterReadOnly || Boolean(response?.step3_plan);
       document.querySelector("#finalPlan").disabled = masterReadOnly;
 
       renderPlans();
       renderSummary();
       document.querySelector("#finalPlan").value = response?.step3_plan || "";
+    }
+
+    function renderMasterOverview(table, response) {
+      masterOverview.classList.remove("hidden");
+      playerStepNav.classList.add("hidden");
+      playerStepTabs.innerHTML = "";
+      document.querySelector("#step1").classList.add("hidden");
+      document.querySelector("#step2").classList.add("hidden");
+      document.querySelector("#step3").classList.add("hidden");
+      document.querySelector("#step4").classList.add("hidden");
+
+      const rows = [
+        ["Étape débloquée par le maître", stepLabels[table.current_step - 1] || "Non démarrée"],
+        ["Étape atteinte par la table", stepLabels[getAccessibleStep(table, response) - 1] || "Non démarrée"],
+        ["Situation initiale", initialSituation],
+        ["Éléments importants", response?.step1_choice || "Non renseigné"],
+        ["Compétences mobilisées", response?.step2_competencies?.join(", ") || "Non renseigné"],
+        ["Plan d'action final", response?.step3_plan || "Non renseigné"]
+      ];
+
+      overviewList.innerHTML = "";
+      rows.forEach(([title, value]) => {
+        const card = document.createElement("article");
+        card.className = "overview-card";
+        card.innerHTML = `<strong></strong><p class="muted"></p>`;
+        card.querySelector("strong").textContent = title;
+        card.querySelector("p").textContent = value;
+        overviewList.append(card);
+      });
     }
 
     function renderEmptyMasterSteps() {
@@ -893,6 +953,18 @@
       return tables.find((table) => table.id === selectedTableId);
     }
 
+    function getPlayerNextStep(response) {
+      if (!response?.step1_choice) return 1;
+      if ((response.step2_competencies || []).length !== requiredCompetencies) return 2;
+      if (!response.step3_plan) return 3;
+      return 4;
+    }
+
+    function getAccessibleStep(table, response) {
+      if (!table) return 1;
+      return Math.min(table.current_step, getPlayerNextStep(response));
+    }
+
     function selectTableFromUrl() {
       const params = new URLSearchParams(window.location.search);
       const tableId = params.get("tableId");
@@ -910,7 +982,10 @@
 
       const isNewTableSelection = selectedTableId !== table.id;
       selectedTableId = table.id;
-      if (isNewTableSelection) visibleStep = table.current_step;
+      if (isNewTableSelection) {
+        const response = responses.find((item) => item.table_id === table.id);
+        visibleStep = getAccessibleStep(table, response);
+      }
       playerOnlyMode = true;
       document.body.classList.add("player-only");
     }

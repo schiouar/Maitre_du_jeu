@@ -359,12 +359,12 @@
     }
 
     .visual-reference {
-      border: 14px solid white;
+      border: 0;
       border-radius: 26px;
-      background: white;
-      box-shadow: var(--soft-shadow);
+      background: transparent;
+      box-shadow: none;
       padding: 0;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .visual-reference img,
@@ -372,12 +372,19 @@
       display: block;
       width: 100%;
       height: auto;
+      border-radius: 22px;
+      box-shadow: var(--soft-shadow);
     }
 
+    .visual-reference.source-card img,
+    .asset-card.source-card img,
+    .visual-reference.situation-source img,
     .situation-layout .visual-reference img,
     .two-col .visual-reference img {
+      aspect-ratio: 1.42 / 1;
       object-fit: contain;
       object-position: center;
+      background: transparent;
     }
 
     .visual-reference.card-source {
@@ -386,9 +393,11 @@
     }
 
     .asset-strip {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      display: none;
+    }
+
+    .asset-strip.single {
+      grid-template-columns: minmax(0, 520px);
     }
 
     .asset-card {
@@ -504,27 +513,59 @@
     }
 
     .competency-card {
+      border: 2px solid #cbd8eb;
+      border-radius: 18px;
+      background: white;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: var(--soft-shadow);
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .competency-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .competency-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(6, 75, 216, .2), var(--soft-shadow);
+    }
+
+    .competency-card img {
+      width: 100%;
+      aspect-ratio: 1.42 / 1;
+      object-fit: cover;
+      border-radius: 0;
+      box-shadow: none;
+      background: var(--cream);
+    }
+
+    .competency-card .caption {
+      display: grid;
+      gap: 5px;
+      padding: 12px 14px 16px;
+      background: white;
+    }
+
+    .competency-card {
       border: 3px solid #9bdcca;
       border-radius: 20px;
-      padding: 18px;
-      min-height: 210px;
-      background: linear-gradient(180deg, #99ddce 0 48%, #fffdf4 49%);
+      padding: 0;
+      min-height: 0;
+      background: white;
       position: relative;
-      display: grid;
-      align-content: end;
       text-align: center;
       cursor: pointer;
       box-shadow: var(--soft-shadow);
+      overflow: hidden;
     }
 
     .competency-card.ai {
       border-color: #8fd8ed;
-      background: linear-gradient(180deg, #8ad9e6 0 48%, #fffdf4 49%);
     }
 
     .competency-card.individual {
       border-color: #ffb375;
-      background: linear-gradient(180deg, #ffc082 0 48%, #fffdf4 49%);
     }
 
     .competency-card.selected {
@@ -548,18 +589,23 @@
       font-weight: 900;
     }
 
-    .competency-icon {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90px;
-      height: 90px;
-      border-radius: 48% 52% 45% 55%;
-      background: #fffdeb;
+    .competency-card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1.42 / 1;
+      object-fit: cover;
+      object-position: center;
+      box-shadow: none;
+      border-radius: 0;
+      transform: scale(1.16) translateY(4%);
+      transform-origin: center;
+    }
+
+    .competency-card .caption {
       display: grid;
-      place-items: center;
-      font-size: 42px;
+      gap: 6px;
+      padding: 14px;
+      background: #fffdf4;
     }
 
     .tag {
@@ -755,8 +801,8 @@
       </div>
 
       <section class="game-card welcome" id="introScreen">
-        <figure class="visual-reference" aria-label="Cartes du jeu">
-          <img src="assets/crops/etape-decouvrir.png" alt="Carte étape : découvrir la situation">
+        <figure class="visual-reference source-card" aria-label="Cartes du jeu">
+          <img src="assets/cards/CARTES_ALL.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/ethique-1-back.png';" alt="Carte règle du jeu">
         </figure>
         <div>
           <h2>Bienvenue - <span data-table-name>Table 1</span></h2>
@@ -771,8 +817,8 @@
       </section>
 
       <section class="situation-layout hidden" id="step1">
-        <article class="visual-reference">
-          <img src="assets/crops/situation-1.png" alt="Carte situation 1 : Philibert">
+        <article class="visual-reference situation-source">
+          <img src="assets/cards/CARTES_ALL-31.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/situation-1.png';" alt="Carte situation 1 : Philibert">
         </article>
         <article class="question-panel stack">
           <h2>Découvrir la situation</h2>
@@ -793,12 +839,12 @@
           <p class="muted"><strong>Choix retenu :</strong> clarifier les besoins prioritaires et les risques immédiats.</p>
           <h3>Quelles compétences mobiliser ? Sélectionnez exactement 3 compétence(s).</h3>
           <div class="asset-strip">
-            <figure class="asset-card">
-              <img src="assets/crops/competence-collective.png" alt="Carte compétence collective">
+            <figure class="asset-card source-card">
+              <img src="assets/cards/CARTES_ALL-18.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/competence-collective-front.png';" alt="Carte mobiliser les compétences">
               <figcaption>Cartes compétences</figcaption>
             </figure>
-            <figure class="asset-card">
-              <img src="assets/crops/competence-ia.png" alt="Carte compétence avec IA">
+            <figure class="asset-card source-card">
+              <img src="assets/cards/CARTES_ALL-17.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/competence-ia-front.png';" alt="Carte compétence collective">
               <figcaption>Cartes avec IA / sans IA</figcaption>
             </figure>
           </div>
@@ -825,7 +871,7 @@
           <button class="green" id="validateStep3" onclick="window.__validatePlayerStep(3)" type="button">Envoyer la réponse ✈</button>
         </article>
         <article class="visual-reference">
-          <img src="assets/crops/ethique-1.png" alt="Carte éthique 1 : pouvoir d'agir et autonomie">
+          <img src="assets/cards/CARTES_ALL-20.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/ethique-1.png';" alt="Carte éthique 1 : pouvoir d'agir et autonomie">
         </article>
       </section>
 
@@ -838,7 +884,7 @@
           <div class="summary-card"><span class="blob-icon">🎯</span><div><h3>Plan d’action final</h3><p>Répartir les rôles, vérifier les risques, puis décider d’une action commune.</p></div></div>
         </article>
         <article class="visual-reference">
-          <img src="assets/crops/hypothese-4.png" alt="Carte hypothèse de travail">
+          <img id="hypothesisVisual" src="assets/cards/CARTES_ALL-19.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/hypothese-1.png';" alt="Carte hypothèse de travail">
         </article>
       </section>
       <section class="game-card stack hidden" id="waitingScreen">
@@ -853,12 +899,51 @@
   <script>
     const steps = ["Situation", "Compétences", "Plan d’action", "Bilan"];
     const skillCards = [
-      ["Écoute active", "Compétence collective", "🙌", "collective"],
-      ["Travail en réseau", "Compétence collective", "◎", "collective"],
-      ["Médiation", "Compétence individuelle", "♙", "individual"],
-      ["Recherche d’informations avec IA", "Compétence I.A", "🤖", "ai"],
-      ["Synthèse assistée par IA", "Compétence I.A", "✦", "ai"],
-      ["Aide à la rédaction avec IA", "Compétence I.A", "✎", "ai"]
+      { name: "Écoute active", kind: "Compétence collective", type: "collective", source: "assets/cards/CARTES_ALL-02.jpg", fallback: "assets/cards/derived/competence-collective-1.png", logo: "assets/cards/CARTES_ALL-01.jpg", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Travail en réseau", kind: "Compétence collective", type: "collective", source: "assets/cards/CARTES_ALL-04.jpg", fallback: "assets/cards/derived/competence-collective-2.png", logo: "assets/cards/CARTES_ALL-01.jpg", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Médiation", kind: "Compétence individuelle", type: "individual", source: "assets/cards/CARTES_ALL-06.jpg", fallback: "assets/cards/derived/competence-individuelle-1.png", logo: "assets/cards/CARTES_ALL-05.jpg", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Accueillir et soutenir la parole", kind: "Compétence individuelle", type: "individual", source: "assets/cards/CARTES_ALL-08.jpg", fallback: "assets/cards/derived/competence-individuelle-2.png", logo: "assets/cards/CARTES_ALL-05.jpg", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Recherche d’informations avec IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/CARTES_ALL-10.jpg", fallback: "assets/cards/derived/competence-ia-1.png", logo: "assets/cards/CARTES_ALL-09.jpg", logoFallback: "assets/cards/derived/competence-ia-front.png" },
+      { name: "Synthèse assistée par IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/CARTES_ALL-12.jpg", fallback: "assets/cards/derived/competence-ia-2.png", logo: "assets/cards/CARTES_ALL-09.jpg", logoFallback: "assets/cards/derived/competence-ia-front.png" }
+    ];
+
+    const planBank = [
+      {
+        needs: ["collective", "individual"],
+        card: "assets/cards/CARTES_ALL-19.jpg",
+        fallback: "assets/cards/derived/hypothese-1.png",
+        text: "Hypothèse 1 - Organiser un accompagnement progressif fondé sur le faire avec, puis renforcer l’autonomie par une première action concrète."
+      },
+      {
+        needs: ["individual", "collective"],
+        card: "assets/cards/CARTES_ALL-21.jpg",
+        fallback: "assets/cards/derived/hypothese-2.png",
+        text: "Hypothèse 2 - Installer une médiation entre les acteurs, clarifier les rôles et soutenir une coordination commune autour de la situation."
+      },
+      {
+        needs: ["ai"],
+        card: "assets/cards/CARTES_ALL-20.jpg",
+        fallback: "assets/cards/derived/hypothese-3.png",
+        text: "Hypothèse 3 - Évaluer les urgences, hiérarchiser les besoins et utiliser l’IA pour relier les informations utiles à la décision."
+      },
+      {
+        needs: ["ai", "collective"],
+        card: "assets/cards/CARTES_ALL-36.jpg",
+        fallback: "assets/cards/derived/hypothese-4.png",
+        text: "Hypothèse 4 - Mobiliser les ressources du territoire, expliciter les notions complexes avec l’IA et formuler une réponse partagée."
+      },
+      {
+        needs: ["collective"],
+        card: "assets/cards/CARTES_ALL-29.jpg",
+        fallback: "assets/cards/derived/hypothese-2.png",
+        text: "Hypothèse 5 - Mettre en commun les observations, identifier les partenaires clés et décider d’un point de suivi collectif."
+      },
+      {
+        needs: ["individual", "ai"],
+        card: "assets/cards/CARTES_ALL-28.jpg",
+        fallback: "assets/cards/derived/hypothese-3.png",
+        text: "Hypothèse 6 - Repérer les risques, questionner les biais de lecture avec l’aide de l’IA et préparer une action adaptée."
+      }
     ];
 
     let currentMode = "setup";
@@ -919,6 +1004,12 @@
       if (option && !option.closest("#step2")) {
         option.parentElement.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
         option.classList.add("selected");
+        if (option.closest("#step3")) {
+          updateHypothesisVisual({
+            card: option.dataset.planCard,
+            fallback: option.dataset.planFallback
+          });
+        }
       }
       const card = event.target.closest("[data-skill]");
       if (!card) return;
@@ -1005,7 +1096,7 @@
       const rows = [
         ["Situation initiale", "Philibert est un jeune homme âgé de 28 ans, en situation de handicap psychique. Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel."],
         ["Éléments importants", selectedProgress >= 1 && response.step1 ? response.step1 : "Non renseigné"],
-        ["Compétences mobilisées", selectedProgress >= 2 && response.skills.length ? response.skills.map((index) => skillCards[index][0]).join(", ") : "Non renseigné"],
+        ["Compétences mobilisées", selectedProgress >= 2 && response.skills.length ? response.skills.map((index) => skillCards[index]?.name).filter(Boolean).join(", ") : "Non renseigné"],
         ["Plan d’action final", selectedProgress >= 3 && response.plan ? response.plan : "Non renseigné"]
       ];
       document.querySelector("#overviewResponses").innerHTML = rows.map(([title, text]) => `<article class="summary-card"><span class="blob-icon">✦</span><div><h3>${title}</h3><p class="muted">${text}</p></div></article>`).join("");
@@ -1069,7 +1160,8 @@
       document.querySelector("#previousPlayerStep").disabled = visibleStep <= 1;
       document.querySelector("#nextPlayerStep").disabled = visibleStep >= getPlayerMaxStep();
       document.querySelector("#step1Custom").value = response.customStep1;
-      document.querySelector("#step3Text").value = response.plan || "Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.";
+      renderPlanOptions(response);
+      document.querySelector("#step3Text").value = response.customPlan || "";
       document.querySelector("#step2 .muted").innerHTML = `<strong>Choix retenu :</strong> ${response.step1 || "à compléter à l'étape 1"}.`;
       syncSelectedOptions(response);
       updatePlayerSummary(response);
@@ -1098,7 +1190,8 @@
       }
       if (step === 3) {
         const selectedPlan = document.querySelector("#step3 .option.selected span:last-child")?.textContent.trim();
-        response.plan = document.querySelector("#step3Text").value.trim() || selectedPlan || "";
+        response.customPlan = document.querySelector("#step3Text").value.trim();
+        response.plan = response.customPlan || selectedPlan || "";
         if (!response.plan) return showPlayerFeedback("Choisissez un plan ou écrivez votre plan avant de valider.");
       }
       tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
@@ -1135,17 +1228,50 @@
 
     function renderSkills() {
       selectedSkills = [...getTableResponse(selectedTable).skills];
-      document.querySelector("#competencies").innerHTML = skillCards.map(([name, kind, icon, style], index) => `
-        <article class="competency-card ${style === "ai" ? "ai" : style === "individual" ? "individual" : ""} ${selectedSkills.includes(index) ? "selected" : ""}" data-skill="${index}">
-          <span class="competency-icon">${icon}</span>
-          <span class="tag">${kind}</span>
-          <h3>${name}</h3>
+      document.querySelector("#competencies").innerHTML = skillCards.map((card, index) => `
+        <article class="competency-card ${card.type === "ai" ? "ai" : card.type === "individual" ? "individual" : ""} ${selectedSkills.includes(index) ? "selected" : ""}" data-skill="${index}">
+          <img src="${card.logo}" onerror="this.onerror=null;this.src='${card.logoFallback}';" alt="${card.kind} - ${card.name}">
+          <div class="caption">
+            <span class="tag">${card.kind}</span>
+            <h3>${card.name}</h3>
+          </div>
         </article>`).join("");
-      const chips = selectedSkills.map((index) => `<span class="chip">${skillCards[index][0]}</span>`).join("");
+      const chips = selectedSkills.map((index) => `<span class="chip">${skillCards[index]?.name || ""}</span>`).join("");
       document.querySelector("#selectedCount").textContent = selectedSkills.length;
       document.querySelector("#selectedChips").innerHTML = chips;
       document.querySelector("#planChips").innerHTML = chips;
       document.querySelector("#validateStep2").disabled = selectedSkills.length !== 3;
+    }
+
+    function getPlanOptions(response) {
+      const types = response.skills.map((index) => skillCards[index]?.type).filter(Boolean);
+      const scored = planBank.map((plan, index) => ({
+        ...plan,
+        index,
+        score: plan.needs.reduce((total, need) => total + (types.includes(need) ? 1 : 0), 0)
+      }));
+      return scored.sort((a, b) => b.score - a.score || a.index - b.index).slice(0, 3);
+    }
+
+    function renderPlanOptions(response) {
+      const options = getPlanOptions(response);
+      const selected = response.plan || options[0]?.text || "";
+      document.querySelector("#step3 .plans").innerHTML = options.map((plan, index) => `
+        <article class="option ${plan.text === selected || (!response.plan && index === 0) ? "selected" : ""}" data-plan-card="${plan.card}" data-plan-fallback="${plan.fallback}">
+          <span class="radio"></span><span>${plan.text}</span>
+        </article>`).join("");
+      const chosen = options.find((plan) => plan.text === selected) || options[0];
+      updateHypothesisVisual(chosen);
+    }
+
+    function updateHypothesisVisual(plan) {
+      const image = document.querySelector("#hypothesisVisual");
+      if (!image || !plan) return;
+      image.onerror = function () {
+        this.onerror = null;
+        this.src = plan.fallback;
+      };
+      image.src = plan.card;
     }
 
     function updatePlayerAvailability() {
@@ -1181,7 +1307,8 @@
         step1: "",
         customStep1: "",
         skills: [0, 3, 4],
-        plan: ""
+        plan: "",
+        customPlan: ""
       };
     }
 
@@ -1202,7 +1329,7 @@
     function updatePlayerSummary(response) {
       const cards = document.querySelectorAll("#step4 .summary-card");
       if (cards[1]) cards[1].querySelector("p").textContent = response.step1 || "Non renseigné";
-      if (cards[2]) cards[2].querySelector(".chip-row").innerHTML = response.skills.map((index) => `<span class="chip">${skillCards[index][0]}</span>`).join("");
+      if (cards[2]) cards[2].querySelector(".chip-row").innerHTML = response.skills.map((index) => `<span class="chip">${skillCards[index]?.name || ""}</span>`).join("");
       if (cards[3]) cards[3].querySelector("p").textContent = response.plan || "Non renseigné";
     }
 

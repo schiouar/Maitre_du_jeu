@@ -339,6 +339,7 @@
 
     body.setup-mode #playPanel,
     body.setup-mode #sidePanel,
+    body.setup-mode #resetBlock,
     body.setup-mode #stepsBlock {
       display: none;
     }
@@ -378,12 +379,12 @@
           <button class="blue" type="submit">Lancer le jeu</button>
         </form>
 
-        <div class="steps" id="stepsBlock">
+        <div class="steps" id="resetBlock">
           <h3>Réinitialisation</h3>
           <button class="red" id="resetGameBtn" type="button">Réinitialiser le jeu</button>
         </div>
 
-        <div class="steps">
+        <div class="steps" id="stepsBlock">
           <h3>Étapes</h3>
           <button class="step-item" data-master-step="1" type="button"><span class="step-number">1</span><span>Découvrir la situation</span></button>
           <button class="step-item" data-master-step="2" type="button"><span class="step-number">2</span><span>Mobiliser les compétences</span></button>
@@ -455,6 +456,13 @@
 
       <aside class="panel stack" id="sidePanel">
         <h2>Tableau de validation</h2>
+        <form class="stack" id="addTableForm">
+          <label>
+            Ajouter une table
+            <input id="newTableName" maxlength="60" placeholder="Ex. Groupe A">
+          </label>
+          <button type="submit">Ajouter la table</button>
+        </form>
         <div id="tablesList" class="stack"></div>
       </aside>
     </section>
@@ -542,6 +550,23 @@
       if (error) return setMasterStatus("Impossible de lancer le jeu.", true);
       await refresh();
       setMasterStatus(`${names.length} table(s) prête(s).`);
+    });
+
+    document.querySelector("#addTableForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const input = document.querySelector("#newTableName");
+      const tableName = input.value.trim();
+      if (!tableName) return setMasterStatus("Indique un nom de table.", true);
+
+      const currentStep = getGlobalStep();
+      const { error } = await supabase
+        .from("game_tables")
+        .insert({ table_name: tableName, current_step: currentStep });
+
+      if (error) return setMasterStatus("Impossible d'ajouter cette table. Le nom existe peut-être déjà.", true);
+      input.value = "";
+      await refresh();
+      setMasterStatus(`${tableName} ajoutée.`);
     });
 
     document.querySelector("#resetGameBtn").addEventListener("click", async () => {
@@ -989,6 +1014,10 @@
 
     function getSelectedTable() {
       return tables.find((table) => table.id === selectedTableId);
+    }
+
+    function getGlobalStep() {
+      return tables.reduce((max, table) => Math.max(max, table.current_step || 1), 1);
     }
 
     function getPlayerNextStep(response) {

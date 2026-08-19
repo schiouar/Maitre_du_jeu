@@ -597,6 +597,17 @@
       font-weight: 900;
     }
 
+    .player-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px;
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255,255,255,.82);
+    }
+
     .setup-only .master-screen,
     .setup-only .player-screen,
     .setup-only #tablePill,
@@ -686,6 +697,10 @@
 
     <section class="player-screen stack">
       <nav class="step-rail" id="playerSteps"></nav>
+      <div class="player-actions hidden" id="playerActions">
+        <button class="secondary" id="previousPlayerStep" type="button">← Étape précédente</button>
+        <button class="secondary" id="nextPlayerStep" type="button">Étape suivante →</button>
+      </div>
 
       <section class="game-card welcome" id="introScreen">
         <div class="card-fan" aria-hidden="true">
@@ -723,7 +738,7 @@
             <article class="option"><span class="radio"></span><span>Identifier uniquement les ressources matérielles disponibles</span></article>
             <article class="option"><span class="radio"></span><span>Reporter la décision pour obtenir toutes les informations</span></article>
           </div>
-          <textarea placeholder="Ou proposez votre propre réponse..."></textarea>
+          <textarea id="step1Custom" placeholder="Ou proposez votre propre réponse..."></textarea>
           <button id="validateStep1" type="button">Valider la réponse →</button>
         </article>
       </section>
@@ -752,7 +767,7 @@
             <article class="option selected"><span class="radio"></span><span>Plan 2 - Répartir les rôles, vérifier les risques, puis décider d’une action commune.</span></article>
             <article class="option"><span class="radio"></span><span>Plan 3 - Comparer les options, formaliser une réponse et prévoir un point de suivi.</span></article>
           </div>
-          <textarea>Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.</textarea>
+          <textarea id="step3Text">Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.</textarea>
           <button class="green" id="validateStep3" type="button">Envoyer la réponse ✈</button>
         </article>
         <article class="ethic-card">
@@ -798,6 +813,7 @@
     let selectedTable = 0;
     let selectedSkills = [0, 3, 4];
     const tableProgress = [0, 0, 0];
+    const tableResponses = [emptyResponse(), emptyResponse(), emptyResponse()];
 
     const body = document.body;
     const tableCount = document.querySelector("#tableCount");
@@ -819,6 +835,7 @@
       visibleStep = 0;
       selectedTable = 0;
       tableProgress.fill(0);
+      tableResponses.forEach((response, index) => tableResponses[index] = emptyResponse());
       switchMode("setup");
     });
     document.querySelector("#unlockBtn").addEventListener("click", () => {
@@ -830,6 +847,20 @@
     document.querySelector("#validateStep1").addEventListener("click", () => validatePlayerStep(1));
     document.querySelector("#validateStep2").addEventListener("click", () => validatePlayerStep(2));
     document.querySelector("#validateStep3").addEventListener("click", () => validatePlayerStep(3));
+    document.querySelector("#previousPlayerStep").addEventListener("click", () => {
+      visibleStep = Math.max(1, visibleStep - 1);
+      render();
+    });
+    document.querySelector("#nextPlayerStep").addEventListener("click", () => {
+      visibleStep = Math.min(getPlayerMaxStep(), visibleStep + 1);
+      render();
+    });
+    playerSteps.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-player-step]");
+      if (!button || button.disabled) return;
+      visibleStep = Number(button.dataset.playerStep);
+      render();
+    });
     tableCount.addEventListener("input", syncTableInputs);
     tableSelect.addEventListener("change", () => { selectedTable = Number(tableSelect.value); render(); });
 
@@ -842,11 +873,13 @@
       const card = event.target.closest("[data-skill]");
       if (!card) return;
       const index = Number(card.dataset.skill);
+      const response = getTableResponse(selectedTable);
       if (selectedSkills.includes(index)) {
         selectedSkills = selectedSkills.filter((item) => item !== index);
       } else if (selectedSkills.length < 3) {
         selectedSkills.push(index);
       }
+      response.skills = [...selectedSkills];
       renderSkills();
     });
 
@@ -865,7 +898,9 @@
       const current = [...tableNames.querySelectorAll("input")].map((input) => input.value.trim());
       tables = Array.from({ length: count }, (_, index) => current[index] || tables[index] || `Table ${index + 1}`);
       while (tableProgress.length < count) tableProgress.push(0);
+      while (tableResponses.length < count) tableResponses.push(emptyResponse());
       tableProgress.length = count;
+      tableResponses.length = count;
       selectedTable = Math.min(selectedTable, count - 1);
       renderTableInputs();
       render();
@@ -913,11 +948,13 @@
           <button class="secondary" type="button" onclick="window.__copyPlayerLink(${index})">🔗 Copier le lien joueur</button>
         </article>`;
       }).join("");
+      const response = getTableResponse(selectedTable);
+      const selectedProgress = tableProgress[selectedTable] || 0;
       const rows = [
         ["Situation initiale", "Philibert est un jeune homme âgé de 28 ans, en situation de handicap psychique. Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel."],
-        ["Éléments importants", tableProgress[selectedTable] >= 1 ? "Clarifier les besoins prioritaires et les risques immédiats." : "Non renseigné"],
-        ["Compétences mobilisées", tableProgress[selectedTable] >= 2 ? "Écoute active, Recherche d’informations avec IA, Synthèse assistée par IA" : "Non renseigné"],
-        ["Plan d’action final", tableProgress[selectedTable] >= 3 ? "Répartir les rôles, vérifier les risques, puis décider d’une action commune." : "Non renseigné"]
+        ["Éléments importants", selectedProgress >= 1 && response.step1 ? response.step1 : "Non renseigné"],
+        ["Compétences mobilisées", selectedProgress >= 2 && response.skills.length ? response.skills.map((index) => skillCards[index][0]).join(", ") : "Non renseigné"],
+        ["Plan d’action final", selectedProgress >= 3 && response.plan ? response.plan : "Non renseigné"]
       ];
       document.querySelector("#overviewResponses").innerHTML = rows.map(([title, text]) => `<article class="summary-card"><span class="blob-icon">✦</span><div><h3>${title}</h3><p class="muted">${text}</p></div></article>`).join("");
     }
@@ -939,7 +976,12 @@
 
     function renderSteps() {
       masterSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, unlockedStep)).join("");
-      playerSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, visibleStep || unlockedStep)).join("");
+      const maxStep = getPlayerMaxStep();
+      playerSteps.innerHTML = steps.map((label, index) => {
+        const step = index + 1;
+        const state = step < visibleStep ? "done" : step === visibleStep ? "current" : "future";
+        return `<button class="step ${state}" data-player-step="${step}" type="button" ${step > maxStep ? "disabled" : ""}><span class="num">${state === "done" ? "✓" : step}</span><span>${step}. ${label}</span></button>`;
+      }).join("");
     }
 
     function stepMarkup(label, step, current) {
@@ -952,28 +994,53 @@
       feedback.classList.add("hidden");
       ["introScreen", "step1", "step2", "step3", "step4"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
       if (!launched || visibleStep === 0) {
+        document.querySelector("#playerActions").classList.add("hidden");
         document.querySelector("#introScreen").classList.remove("hidden");
         return;
       }
+      const response = getTableResponse(selectedTable);
+      document.querySelector("#playerActions").classList.remove("hidden");
+      document.querySelector("#previousPlayerStep").disabled = visibleStep <= 1;
+      document.querySelector("#nextPlayerStep").disabled = visibleStep >= getPlayerMaxStep();
+      document.querySelector("#step1Custom").value = response.customStep1;
+      document.querySelector("#step3Text").value = response.plan || "Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.";
+      document.querySelector("#step2 .muted").innerHTML = `<strong>Choix retenu :</strong> ${response.step1 || "à compléter à l'étape 1"}.`;
+      syncSelectedOptions(response);
+      updatePlayerSummary(response);
       document.querySelector(`#step${visibleStep}`).classList.remove("hidden");
     }
 
     function validatePlayerStep(step) {
+      const response = getTableResponse(selectedTable);
+      if (step === 1) {
+        const selectedText = document.querySelector("#step1 .option.selected span:last-child")?.textContent.trim();
+        const customText = document.querySelector("#step1Custom").value.trim();
+        response.step1 = customText || selectedText || "";
+        response.customStep1 = customText;
+      }
+      if (step === 2) {
+        if (selectedSkills.length !== 3) return showPlayerFeedback("Sélectionnez exactement 3 compétences avant de valider.");
+        response.skills = [...selectedSkills];
+      }
+      if (step === 3) {
+        const selectedPlan = document.querySelector("#step3 .option.selected span:last-child")?.textContent.trim();
+        response.plan = document.querySelector("#step3Text").value.trim() || selectedPlan || "";
+      }
       tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
       const nextStep = step + 1;
-      const feedback = document.querySelector("#playerFeedback");
       if (unlockedStep >= nextStep) {
         visibleStep = nextStep;
-        feedback.textContent = `Réponse enregistrée. Étape ${nextStep} disponible.`;
+        showPlayerFeedback(`Réponse enregistrée. Étape ${nextStep} disponible.`);
       } else {
         visibleStep = step;
-        feedback.textContent = `Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`;
+        showPlayerFeedback(`Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
       }
       render();
-      feedback.classList.remove("hidden");
+      document.querySelector("#playerFeedback").classList.remove("hidden");
     }
 
     function renderSkills() {
+      selectedSkills = [...getTableResponse(selectedTable).skills];
       document.querySelector("#competencies").innerHTML = skillCards.map(([name, kind, icon, style], index) => `
         <article class="competency-card ${style === "ai" ? "ai" : style === "individual" ? "individual" : ""} ${selectedSkills.includes(index) ? "selected" : ""}" data-skill="${index}">
           <span class="competency-icon">${icon}</span>
@@ -985,6 +1052,44 @@
       document.querySelector("#selectedChips").innerHTML = chips;
       document.querySelector("#planChips").innerHTML = chips;
       document.querySelector("#validateStep2").disabled = selectedSkills.length !== 3;
+    }
+
+    function getPlayerMaxStep() {
+      return Math.max(1, Math.min(unlockedStep || 1, (tableProgress[selectedTable] || 0) + 1));
+    }
+
+    function getTableResponse(index) {
+      if (!tableResponses[index]) tableResponses[index] = emptyResponse();
+      return tableResponses[index];
+    }
+
+    function emptyResponse() {
+      return {
+        step1: "",
+        customStep1: "",
+        skills: [0, 3, 4],
+        plan: ""
+      };
+    }
+
+    function showPlayerFeedback(message) {
+      const feedback = document.querySelector("#playerFeedback");
+      feedback.textContent = message;
+      feedback.classList.remove("hidden");
+    }
+
+    function syncSelectedOptions(response) {
+      document.querySelectorAll("#step1 .option").forEach((option) => {
+        const text = option.querySelector("span:last-child")?.textContent.trim();
+        option.classList.toggle("selected", text === response.step1 || (!response.step1 && option === document.querySelector("#step1 .option")));
+      });
+    }
+
+    function updatePlayerSummary(response) {
+      const cards = document.querySelectorAll("#step4 .summary-card");
+      if (cards[1]) cards[1].querySelector("p").textContent = response.step1 || "Non renseigné";
+      if (cards[2]) cards[2].querySelector(".chip-row").innerHTML = response.skills.map((index) => `<span class="chip">${skillCards[index][0]}</span>`).join("");
+      if (cards[3]) cards[3].querySelector("p").textContent = response.plan || "Non renseigné";
     }
 
     function escapeHtml(value) {

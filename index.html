@@ -340,7 +340,8 @@
     body.setup-mode #playPanel,
     body.setup-mode #sidePanel,
     body.setup-mode #resetBlock,
-    body.setup-mode #stepsBlock {
+    body.setup-mode #stepsBlock,
+    body.setup-mode #masterStatus {
       display: none;
     }
 
@@ -415,6 +416,15 @@
             <button class="secondary" id="nextStepBtn" type="button">Étape suivante</button>
           </div>
           <div class="step-tabs" id="playerStepTabs"></div>
+
+          <section class="stack hidden" id="playerIntro">
+            <h2>Bienvenue</h2>
+            <div class="panel">
+              <h3>Règles du jeu</h3>
+              <p class="muted">Vous allez avancer en trois étapes successives. Lisez la situation, répondez avec votre table, puis attendez que le maître du jeu ouvre la suite.</p>
+            </div>
+            <button class="blue" id="discoverSituationBtn" type="button">Découvrir la situation</button>
+          </section>
 
           <section class="stack" id="step1">
             <h2>Étape 1 - Situation</h2>
@@ -509,6 +519,8 @@
     const plansList = document.querySelector("#plansList");
     const masterOverview = document.querySelector("#masterOverview");
     const overviewList = document.querySelector("#overviewList");
+    const playerIntro = document.querySelector("#playerIntro");
+    const discoverSituationBtn = document.querySelector("#discoverSituationBtn");
     const summaryList = document.querySelector("#summaryList");
     const playerStatus = document.querySelector("#playerStatus");
     const masterStatus = document.querySelector("#masterStatus");
@@ -540,7 +552,8 @@
         return setMasterStatus("Chaque table doit avoir un nom différent.", true);
       }
 
-      await supabase.from("game_tables").delete().neq("table_name", "");
+      const deleteResult = await supabase.from("game_tables").delete().neq("table_name", "");
+      if (deleteResult.error) return setMasterStatus("Impossible de nettoyer l'ancien jeu avant lancement.", true);
       const rows = names.map((name) => ({
         table_name: name,
         current_step: 1
@@ -550,6 +563,12 @@
       if (error) return setMasterStatus("Impossible de lancer le jeu.", true);
       await refresh();
       setMasterStatus(`${names.length} table(s) prête(s).`);
+    });
+
+    discoverSituationBtn.addEventListener("click", () => {
+      const table = getSelectedTable();
+      if (table) localStorage.setItem(getIntroStorageKey(table.id), "seen");
+      render();
     });
 
     document.querySelector("#addTableForm").addEventListener("submit", async (event) => {
@@ -874,16 +893,18 @@
       }
 
       masterOverview.classList.add("hidden");
+      const shouldShowIntro = visibleStep === 1 && !response?.step1_choice && !hasSeenIntro(table.id);
+      playerIntro.classList.toggle("hidden", !shouldShowIntro);
       playerStepNav.classList.toggle("hidden", accessibleStep === 1);
       visibleStepLabel.textContent = `Étape ${visibleStep}/4`;
       previousStepBtn.disabled = visibleStep <= 1;
       nextStepBtn.disabled = visibleStep >= accessibleStep;
 
-      document.querySelector("#step1").classList.toggle("hidden", visibleStep !== 1);
+      document.querySelector("#step1").classList.toggle("hidden", shouldShowIntro || visibleStep !== 1);
       document.querySelector("#step2").classList.toggle("hidden", visibleStep !== 2);
       document.querySelector("#step3").classList.toggle("hidden", visibleStep !== 3);
       document.querySelector("#step4").classList.toggle("hidden", visibleStep !== 4);
-      renderPlayerStepTabs(accessibleStep);
+      renderPlayerStepTabs(shouldShowIntro ? 0 : accessibleStep);
 
       document.querySelectorAll(".choice").forEach((item) => {
         item.classList.toggle("selected", item.dataset.value === response?.step1_choice);
@@ -951,6 +972,7 @@
 
     function renderPlayerStepTabs(currentStep) {
       playerStepTabs.innerHTML = "";
+      if (currentStep === 0) return;
       stepLabels.forEach((label, index) => {
         const step = index + 1;
         const button = document.createElement("button");
@@ -1030,6 +1052,14 @@
     function getAccessibleStep(table, response) {
       if (!table) return 1;
       return Math.min(table.current_step, getPlayerNextStep(response));
+    }
+
+    function getIntroStorageKey(tableId) {
+      return `jeu-etapes-intro-${tableId}`;
+    }
+
+    function hasSeenIntro(tableId) {
+      return localStorage.getItem(getIntroStorageKey(tableId)) === "seen";
     }
 
     function selectTableFromUrl() {

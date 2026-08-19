@@ -175,6 +175,11 @@
       align-items: start;
     }
 
+    .setup-layout {
+      width: min(560px, 100%);
+      margin: 20px auto 0;
+    }
+
     .panel {
       background: rgba(255, 255, 255, .94);
       border: 2px solid var(--line);
@@ -582,8 +587,16 @@
     .status-pill.pending { background: #fff1dc; color: #c05621; }
     .status-pill.wait { background: #eef2f8; color: #657089; }
 
+    .setup-only .master-screen,
+    .setup-only .player-screen,
+    .setup-only #tablePill,
+    .setup-only .mode-switch,
+    .master-only .setup-screen,
     .master-only .player-screen,
-    .player-only .master-screen { display: none; }
+    .master-only .mode-switch,
+    .player-only .setup-screen,
+    .player-only .master-screen,
+    .player-only .mode-switch { display: none; }
 
     @media (max-width: 1100px) {
       .layout, .welcome, .situation-layout, .two-col { grid-template-columns: 1fr; }
@@ -602,7 +615,7 @@
     }
   </style>
 </head>
-<body class="master-only">
+<body class="setup-only">
   <main class="app">
     <header class="topbar">
       <div class="brand">
@@ -613,13 +626,10 @@
         </div>
       </div>
       <div class="table-pill" id="tablePill">Table 1</div>
-      <div class="mode-switch">
-        <button class="active" id="masterMode" type="button">Maître du jeu</button>
-        <button id="playerMode" type="button">Joueur</button>
-      </div>
+      <div class="mode-switch" aria-hidden="true"></div>
     </header>
 
-    <section class="master-screen layout">
+    <section class="setup-screen setup-layout">
       <aside class="panel stack">
         <h2>Maître du jeu</h2>
         <label class="setup-field">
@@ -628,9 +638,15 @@
         </label>
         <div class="stack" id="tableNames"></div>
         <button id="launchBtn" type="button">▶ Lancer le jeu</button>
+      </aside>
+    </section>
 
+    <section class="master-screen layout">
+      <aside class="panel stack">
+        <h2>Pilotage</h2>
         <h3>Étapes</h3>
         <div class="stack" id="masterSteps"></div>
+        <button id="unlockBtn" type="button">🔒 Débloquer l’étape suivante</button>
         <button class="red" id="resetBtn" type="button">↻ Réinitialiser le jeu</button>
       </aside>
 
@@ -654,7 +670,6 @@
         <h2>Suivi des tables</h2>
         <p class="muted">État d’avancement des groupes et liens à envoyer.</p>
         <div id="tableCards" class="stack"></div>
-        <button id="unlockBtn" type="button">🔒 Débloquer l’étape suivante</button>
       </aside>
     </section>
 
@@ -763,14 +778,14 @@
       ["Aide à la rédaction avec IA", "Compétence I.A", "✎", "ai"]
     ];
 
-    let currentMode = "master";
+    let currentMode = "setup";
     let launched = false;
     let unlockedStep = 0;
     let visibleStep = 0;
     let tables = ["Table 1", "Table 2", "Table 3"];
     let selectedTable = 0;
     let selectedSkills = [0, 3, 4];
-    const tableProgress = [2, 1, 0];
+    const tableProgress = [0, 0, 0];
 
     const body = document.body;
     const tableCount = document.querySelector("#tableCount");
@@ -780,11 +795,25 @@
     const masterSteps = document.querySelector("#masterSteps");
     const playerSteps = document.querySelector("#playerSteps");
 
-    document.querySelector("#masterMode").addEventListener("click", () => switchMode("master"));
-    document.querySelector("#playerMode").addEventListener("click", () => switchMode("player"));
-    document.querySelector("#launchBtn").addEventListener("click", () => { launched = true; unlockedStep = 1; visibleStep = 0; render(); });
-    document.querySelector("#resetBtn").addEventListener("click", () => { launched = false; unlockedStep = 0; visibleStep = 0; render(); });
-    document.querySelector("#unlockBtn").addEventListener("click", () => { if (launched) unlockedStep = Math.min(4, unlockedStep + 1); render(); });
+    document.querySelector("#launchBtn").addEventListener("click", () => {
+      launched = true;
+      unlockedStep = 1;
+      visibleStep = 0;
+      switchMode("master");
+    });
+    document.querySelector("#resetBtn").addEventListener("click", () => {
+      launched = false;
+      unlockedStep = 0;
+      visibleStep = 0;
+      selectedTable = 0;
+      tableProgress.fill(0);
+      switchMode("setup");
+    });
+    document.querySelector("#unlockBtn").addEventListener("click", () => {
+      if (!launched) return;
+      unlockedStep = Math.min(4, unlockedStep + 1);
+      render();
+    });
     document.querySelector("#startPlayerBtn").addEventListener("click", () => { visibleStep = 1; render(); });
     document.querySelector("#validateStep1").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 1); visibleStep = Math.min(unlockedStep, 2); render(); });
     document.querySelector("#validateStep2").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 2); visibleStep = Math.min(unlockedStep, 3); render(); });
@@ -811,11 +840,10 @@
 
     function switchMode(mode) {
       currentMode = mode;
+      body.classList.toggle("setup-only", mode === "setup");
       body.classList.toggle("master-only", mode === "master");
       body.classList.toggle("player-only", mode === "player");
-      document.querySelector("#masterMode").classList.toggle("active", mode === "master");
-      document.querySelector("#playerMode").classList.toggle("active", mode === "player");
-      document.querySelector("#modeSubtitle").textContent = mode === "master" ? "Interface maître du jeu" : "Interface joueur";
+      document.querySelector("#modeSubtitle").textContent = mode === "setup" ? "Création de la partie" : mode === "master" ? "Interface maître du jeu" : "Interface joueur";
       if (mode === "player" && launched && visibleStep === 0) visibleStep = 0;
       render();
     }
@@ -824,6 +852,9 @@
       const count = Math.max(1, Math.min(8, Number(tableCount.value) || 1));
       const current = [...tableNames.querySelectorAll("input")].map((input) => input.value.trim());
       tables = Array.from({ length: count }, (_, index) => current[index] || tables[index] || `Table ${index + 1}`);
+      while (tableProgress.length < count) tableProgress.push(0);
+      tableProgress.length = count;
+      selectedTable = Math.min(selectedTable, count - 1);
       renderTableInputs();
       render();
     }
@@ -845,6 +876,8 @@
     function render() {
       document.querySelector("#tablePill").textContent = tables[selectedTable] || "Table 1";
       document.querySelectorAll("[data-table-name]").forEach((node) => node.textContent = tables[selectedTable] || "Table 1");
+      document.querySelector("#unlockBtn").disabled = !launched || unlockedStep >= 4;
+      document.querySelector("#unlockBtn").textContent = unlockedStep >= 4 ? "✓ Toutes les étapes sont débloquées" : "🔒 Débloquer l’étape suivante";
       renderTables();
       renderSteps();
       renderPlayerScreen();
@@ -865,7 +898,7 @@
           <p class="muted">Étape actuelle : ${steps[Math.max(0, Math.min(unlockedStep - 1, progress))] || "en attente du lancement"}</p>
           <span class="status-pill ${status[0] === "pending" ? "pending" : status[0] === "wait" ? "wait" : ""}">${status[1]}</span>
           <button class="secondary" type="button" onclick="window.__selectTable(${index})">👁 Voir la réponse</button>
-          <button class="secondary" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(location.href + '?table=${encodeURIComponent(name)}')">🔗 Copier le lien joueur</button>
+          <button class="secondary" type="button" onclick="window.__copyPlayerLink(${index})">🔗 Copier le lien joueur</button>
         </article>`;
       }).join("");
       const rows = [
@@ -880,6 +913,15 @@
     window.__selectTable = (index) => {
       selectedTable = index;
       render();
+    };
+
+    window.__copyPlayerLink = async (index) => {
+      const url = new URL(window.location.href);
+      url.search = "";
+      url.searchParams.set("table", tables[index]);
+      url.searchParams.set("role", "player");
+      if (navigator.clipboard) await navigator.clipboard.writeText(url.toString());
+      alert(`Lien joueur copié pour ${tables[index]}`);
     };
 
     function renderSteps() {
@@ -919,7 +961,20 @@
       return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
     }
 
+    function bootFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("role") !== "player") return;
+      const tableName = params.get("table");
+      const found = tables.findIndex((name) => name === tableName);
+      selectedTable = found >= 0 ? found : 0;
+      launched = true;
+      unlockedStep = 1;
+      visibleStep = 0;
+      switchMode("player");
+    }
+
     renderTableInputs();
+    bootFromUrl();
     render();
   </script>
 </body>

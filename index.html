@@ -332,6 +332,17 @@
       grid-template-columns: 320px 1fr 300px;
     }
 
+    body.setup-mode .grid {
+      grid-template-columns: minmax(320px, 620px);
+      justify-content: start;
+    }
+
+    body.setup-mode #playPanel,
+    body.setup-mode #sidePanel,
+    body.setup-mode #stepsBlock {
+      display: none;
+    }
+
     .status { min-height: 20px; color: var(--muted); }
     .status.error { color: var(--red); font-weight: 800; }
     .status.waiting { color: #7c3aed; font-weight: 800; }
@@ -363,10 +374,11 @@
             Nombre de tables
             <input id="tableCount" type="number" min="1" max="20" value="3" required>
           </label>
-          <button class="blue" type="submit">Créer les tables</button>
+          <div class="stack" id="tableNameFields"></div>
+          <button class="blue" type="submit">Lancer le jeu</button>
         </form>
 
-        <div class="steps">
+        <div class="steps" id="stepsBlock">
           <h3>Réinitialisation</h3>
           <button class="red" id="resetGameBtn" type="button">Réinitialiser le jeu</button>
         </div>
@@ -500,6 +512,8 @@
     const saveStep1Btn = document.querySelector("#saveStep1");
     const saveStep2Btn = document.querySelector("#saveStep2");
     const saveStep3Btn = document.querySelector("#saveStep3");
+    const tableCountInput = document.querySelector("#tableCount");
+    const tableNameFields = document.querySelector("#tableNameFields");
     const stepLabels = [
       "Situation",
       "Compétences",
@@ -508,19 +522,26 @@
     ];
 
     document.querySelector("#requiredCount").textContent = requiredCompetencies;
+    tableCountInput.addEventListener("input", renderTableNameFields);
 
     document.querySelector("#createTablesForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const count = Number(document.querySelector("#tableCount").value);
-      const rows = Array.from({ length: count }, (_, index) => ({
-        table_name: `Table ${index + 1}`,
+      const names = Array.from(tableNameFields.querySelectorAll("input"))
+        .map((input, index) => input.value.trim() || `Table ${index + 1}`);
+      if (new Set(names).size !== names.length) {
+        return setMasterStatus("Chaque table doit avoir un nom différent.", true);
+      }
+
+      await supabase.from("game_tables").delete().neq("table_name", "");
+      const rows = names.map((name) => ({
+        table_name: name,
         current_step: 1
       }));
 
-      const { error } = await supabase.from("game_tables").upsert(rows, { onConflict: "table_name" });
-      if (error) return setMasterStatus("Impossible de créer les tables.", true);
+      const { error } = await supabase.from("game_tables").insert(rows);
+      if (error) return setMasterStatus("Impossible de lancer le jeu.", true);
       await refresh();
-      setMasterStatus(`${count} table(s) prête(s).`);
+      setMasterStatus(`${names.length} table(s) prête(s).`);
     });
 
     document.querySelector("#resetGameBtn").addEventListener("click", async () => {
@@ -705,6 +726,23 @@
 
     function setAppMode() {
       document.body.classList.toggle("master-mode", !playerOnlyMode);
+      document.body.classList.toggle("setup-mode", !playerOnlyMode && tables.length === 0);
+    }
+
+    function renderTableNameFields() {
+      const count = Math.max(1, Math.min(20, Number(tableCountInput.value) || 1));
+      const existingValues = Array.from(tableNameFields.querySelectorAll("input")).map((input) => input.value);
+      tableNameFields.innerHTML = "";
+
+      for (let index = 0; index < count; index += 1) {
+        const label = document.createElement("label");
+        label.textContent = `Nom table ${index + 1}`;
+        const input = document.createElement("input");
+        input.maxLength = 60;
+        input.value = existingValues[index] || `Table ${index + 1}`;
+        label.append(input);
+        tableNameFields.append(label);
+      }
     }
 
     function renderTables() {
@@ -1047,6 +1085,7 @@
     }
 
     renderStaticChoices();
+    renderTableNameFields();
     await refresh();
     setInterval(refresh, 5000);
   </script>

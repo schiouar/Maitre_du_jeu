@@ -3,1150 +3,924 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jeu en étapes</title>
+  <title>Les mécaniques réflexives - Prototype</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --soft: #f1f4f8;
-      --text: #121722;
-      --muted: #607086;
-      --line: #dce3ec;
-      --purple: #6d4be8;
-      --purple-dark: #5835cf;
-      --green: #11825d;
-      --blue: #2563eb;
-      --red: #c0262d;
-      --radius: 8px;
-      --shadow: 0 16px 44px rgba(15, 23, 42, 0.08);
+      --ink: #081334;
+      --blue: #064bd8;
+      --blue-dark: #103aa5;
+      --green: #0b8f68;
+      --mint: #dff8ed;
+      --pink: #ff8aa5;
+      --coral: #ff7f7a;
+      --yellow: #ffc331;
+      --cream: #fffbed;
+      --paper: #fffef9;
+      --line: #dfe7f3;
+      --muted: #61708b;
+      --violet: #7048e8;
+      --orange: #ff8a3d;
+      --shadow: 12px 14px 0 rgba(255, 128, 137, 0.58), 0 20px 45px rgba(15, 23, 42, 0.09);
+      --soft-shadow: 0 14px 35px rgba(10, 30, 90, 0.09);
+      --radius: 24px;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 14px;
+      color: var(--ink);
+      font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+      background:
+        linear-gradient(rgba(210, 225, 245, .45) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(210, 225, 245, .45) 1px, transparent 1px),
+        #fffefa;
+      background-size: 34px 34px;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 280px;
+      height: 180px;
+      border: 10px solid rgba(99, 205, 231, .55);
+      border-left-color: transparent;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before { left: -90px; top: 130px; transform: rotate(-28deg); }
+    body::after { right: -80px; bottom: 70px; transform: rotate(18deg); }
 
     button, input, textarea, select { font: inherit; }
 
-    .app {
-      width: min(1180px, calc(100vw - 28px));
-      margin: 20px auto 32px;
-      display: grid;
-      gap: 14px;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    h1, h2, h3, p { margin: 0; }
-    h1 { font-size: 26px; }
-    h2 { font-size: 18px; }
-    h3 { font-size: 15px; }
-
-    .muted { color: var(--muted); line-height: 1.45; }
-
-    .tabs {
-      display: none;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    button, .link-button {
-      min-height: 38px;
+    button {
+      min-height: 48px;
       border: 0;
-      border-radius: var(--radius);
-      padding: 8px 12px;
-      background: var(--purple);
+      border-radius: 12px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, var(--blue), #0b39bf);
       color: white;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      box-shadow: 0 8px 16px rgba(6, 75, 216, .18);
     }
 
-    button:hover, .link-button:hover { background: var(--purple-dark); }
-    button.secondary, .link-button.secondary { background: var(--soft); color: var(--text); border: 1px solid var(--line); }
-    button.secondary:hover, .link-button.secondary:hover { background: #e8edf5; }
-    button.green { background: var(--green); }
-    button.blue { background: var(--blue); }
-    button.red { background: var(--red); }
-    button:disabled { opacity: 0.55; cursor: not-allowed; }
-    .tabs button.active { background: var(--purple); color: #fff; }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
+    button.secondary {
+      color: var(--blue-dark);
+      background: white;
+      border: 2px solid #cddbf3;
+      box-shadow: none;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 300px 1fr 300px;
-      gap: 14px;
-      align-items: start;
-    }
-
-    .stack { display: grid; gap: 12px; }
-
-    label {
-      display: grid;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 800;
-      color: #2d3440;
-    }
+    button.green { background: linear-gradient(135deg, var(--green), #08714f); }
+    button.red { background: linear-gradient(135deg, #e11d48, #b91c1c); }
+    button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
 
     input, textarea, select {
       width: 100%;
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
+      min-height: 48px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
       background: white;
-      color: var(--text);
-      padding: 9px 10px;
+      color: var(--ink);
       outline: none;
+      font-weight: 700;
     }
 
-    textarea { min-height: 130px; resize: vertical; }
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 3px rgba(109, 75, 232, 0.14);
+    textarea { min-height: 145px; resize: vertical; line-height: 1.45; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2 { color: var(--blue-dark); letter-spacing: 0; }
+    h1 { font-size: clamp(30px, 4vw, 48px); line-height: .95; }
+    h2 { font-size: clamp(24px, 3vw, 34px); }
+    h3 { font-size: 18px; }
+    .muted { color: var(--muted); line-height: 1.45; }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1500px, calc(100vw - 28px));
+      margin: 24px auto 40px;
+      display: grid;
+      gap: 22px;
     }
 
-    .table-card, .choice, .competency, .plan-card {
-      border: 1px solid var(--line);
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 18px;
+      padding: 8px 10px 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .scribble {
+      width: 54px;
+      height: 54px;
+      border: 5px solid #91dff0;
+      border-top-color: var(--yellow);
+      border-radius: 20px 50% 18px 45%;
+      transform: rotate(-12deg);
+      background: rgba(255, 195, 49, .12);
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.82);
+    }
+
+    .mode-switch button {
+      min-height: 40px;
+      padding: 8px 16px;
+      box-shadow: none;
+    }
+
+    .mode-switch button:not(.active) {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .table-pill {
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 22px;
+      border-radius: 16px;
+      background: #fff4e8;
+      color: var(--blue-dark);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr 360px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, .94);
+      border: 2px solid var(--line);
       border-radius: var(--radius);
-      background: white;
-      padding: 12px;
+      padding: 26px;
+      box-shadow: var(--shadow);
+      position: relative;
     }
 
-    .table-card {
-      display: grid;
-      gap: 9px;
-    }
+    .panel.soft { box-shadow: var(--soft-shadow); }
+    .stack { display: grid; gap: 16px; }
+    .hidden { display: none !important; }
 
-    .table-card.active {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 2px rgba(109, 75, 232, 0.13);
-    }
-
-    .table-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .mini-actions {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-    }
-
-    .table-name-input {
-      min-height: 32px;
-      padding: 5px 7px;
-      font-weight: 800;
-    }
-
-    .badge {
-      width: max-content;
-      max-width: 100%;
-      border-radius: 999px;
-      padding: 4px 8px;
-      background: #ede9fe;
-      color: #5534c9;
-      font-weight: 800;
-      font-size: 12px;
-    }
-
-    .ok { color: var(--green); font-weight: 800; }
-    .warn { color: #b45309; font-weight: 800; }
-
-    .steps {
+    .setup-field {
       display: grid;
       gap: 8px;
+      font-weight: 900;
+      color: var(--blue-dark);
     }
 
-    .player-nav {
+    .step-rail {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 16px;
+      background: rgba(255, 255, 255, .72);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .step {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 10px;
-      flex-wrap: wrap;
-      background: var(--soft);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 10px;
+      min-height: 62px;
+      padding: 12px 16px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      color: #7b8498;
+      font-weight: 900;
     }
 
-    .step-tabs {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .step-tab {
-      min-height: 42px;
-      background: var(--soft);
-      color: var(--text);
-      border: 1px solid var(--line);
-      justify-content: flex-start;
-      text-align: left;
-    }
-
-    .step-tab.active {
-      background: #ede9fe;
-      color: #5534c9;
-      border-color: var(--purple);
-    }
-
-    .step-tab.done {
-      background: #e8f7f1;
-      color: var(--green);
-      border-color: #b7ead7;
-    }
-
-    .step-item:disabled,
-    .step-tab:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .step-item {
-      display: grid;
-      grid-template-columns: 28px 1fr;
-      gap: 9px;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 9px;
-      background: #fff;
-      color: var(--text);
-      text-align: left;
-      justify-content: start;
-    }
-
-    .step-number {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
+    .step .num,
+    .round {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
       display: grid;
       place-items: center;
-      background: #e5e7eb;
-      color: #374151;
       font-weight: 900;
-      font-size: 12px;
+      flex: 0 0 auto;
+      background: #eef2f8;
+      color: #8c95a8;
     }
 
-    .step-item.active .step-number { background: var(--green); color: #fff; }
-    .step-item.done .step-number { background: var(--green); color: #fff; }
-    .step-item.next { border-color: var(--purple); background: #f5f2ff; color: #5534c9; }
-    .step-item.next .step-number { background: var(--purple); color: #fff; }
-    .step-item.future { background: #f8fafc; color: #9aa4b2; }
-    .step-item.future .step-number { background: #e5e7eb; color: #9aa4b2; }
-    .step-item.done { border-color: #b7ead7; background: #f0fbf6; }
-    .step-item.active { border-color: #b7ead7; background: #f0fbf6; }
+    .step.done {
+      color: var(--green);
+      border-color: #a9e8ce;
+      background: var(--mint);
+    }
 
-    .choices, .competencies, .plans {
+    .step.done .num { background: var(--green); color: white; }
+    .step.current {
+      color: var(--blue-dark);
+      border-color: var(--blue);
+      background: #f5f8ff;
+    }
+
+    .step.current .num { background: var(--blue); color: white; }
+    .step.future { opacity: .55; }
+
+    .game-card {
+      background: radial-gradient(circle at 25% 10%, white 0 18%, transparent 19%), linear-gradient(135deg, var(--cream), #fff);
+      border: 2px solid #f1ddbf;
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::after {
+      content: "";
+      position: absolute;
+      right: -50px;
+      top: 10px;
+      width: 170px;
+      height: 170px;
+      border: 9px solid rgba(114, 210, 232, .7);
+      border-left-color: transparent;
+      border-radius: 50%;
+      transform: rotate(-30deg);
+    }
+
+    .welcome {
       display: grid;
-      gap: 10px;
+      grid-template-columns: 360px 1fr;
+      gap: 30px;
+      align-items: center;
     }
 
-    .overview-list {
+    .card-fan {
+      position: relative;
+      min-height: 300px;
+    }
+
+    .playing-card {
+      position: absolute;
+      width: 170px;
+      height: 250px;
+      left: 70px;
+      top: 24px;
+      border: 14px solid white;
+      border-radius: 22px;
+      box-shadow: 0 18px 30px rgba(0,0,0,.12);
+      background:
+        linear-gradient(rgba(255,255,255,.17) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.17) 1px, transparent 1px),
+        #82dff0;
+      background-size: 22px 22px;
+    }
+
+    .playing-card:nth-child(1) { background-color: #ff9bad; transform: rotate(-15deg); left: 40px; }
+    .playing-card:nth-child(2) { background-color: #92e19c; transform: rotate(3deg); left: 105px; }
+    .playing-card:nth-child(3) { transform: rotate(17deg); left: 170px; }
+
+    .rule-list {
       display: grid;
-      gap: 10px;
+      gap: 12px;
+      margin-top: 18px;
     }
 
-    .overview-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: #fff;
+    .rule {
+      display: grid;
+      grid-template-columns: 48px 70px 1fr;
+      gap: 14px;
+      align-items: center;
+      border: 2px solid #eadfce;
+      border-radius: 16px;
       padding: 12px;
-      display: grid;
-      gap: 6px;
+      background: rgba(255,255,255,.9);
     }
 
-    .choice, .competency, .plan-card {
+    .blob-icon {
+      width: 62px;
+      height: 62px;
+      border-radius: 45% 55% 50% 44%;
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      background: #ffc4d1;
+    }
+
+    .situation-layout,
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(280px, 420px) 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .situation-card,
+    .ethic-card {
+      min-height: 430px;
+      border: 14px solid white;
+      border-radius: 26px;
+      background:
+        linear-gradient(rgba(215, 185, 150, .24) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(215, 185, 150, .24) 2px, transparent 2px),
+        #fff9ec;
+      background-size: 36px 36px;
+      box-shadow: var(--soft-shadow);
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .situation-card::before {
+      content: "";
+      position: absolute;
+      left: -40px;
+      top: 58px;
+      width: 150px;
+      height: 340px;
+      background: var(--yellow);
+      border-radius: 32px;
+      transform: rotate(-6deg);
+    }
+
+    .person {
+      position: absolute;
+      left: 38px;
+      bottom: 24px;
+      width: 130px;
+      height: 240px;
+      border: 5px solid #74cef0;
+      border-top: 0;
+      border-radius: 70px 70px 20px 20px;
+      opacity: .8;
+    }
+
+    .card-label {
+      position: relative;
+      z-index: 1;
+      width: max-content;
+      padding: 12px 36px;
+      color: var(--blue-dark);
+      font-weight: 900;
+      background: #fffdeb;
+      border: 4px solid var(--blue-dark);
+      border-right-width: 2px;
+      transform: rotate(-2deg);
+      clip-path: polygon(8% 0, 90% 0, 100% 45%, 94% 88%, 35% 100%, 0 70%);
+    }
+
+    .situation-text {
+      position: relative;
+      z-index: 1;
+      margin-left: 165px;
+      margin-top: 48px;
+      display: grid;
+      gap: 18px;
+      font-size: 20px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .question-panel {
+      background: rgba(255, 251, 237, .97);
+      border: 2px solid #f0dfc1;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 14px;
+      align-items: center;
+      border: 2px solid #cbd8eb;
+      border-radius: 14px;
+      background: rgba(255,255,255,.92);
+      padding: 18px;
+      font-weight: 900;
       cursor: pointer;
     }
 
-    .choice.selected, .competency.selected, .plan-card.selected {
-      border-color: var(--purple);
-      background: #f5f2ff;
-      box-shadow: 0 0 0 2px rgba(109, 75, 232, 0.13);
+    .option.selected {
+      border-color: var(--blue);
+      box-shadow: inset 0 0 0 1px var(--blue);
+      background: #f5f8ff;
     }
 
-    .competencies {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .radio {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid #b8c2d6;
+      display: block;
     }
 
-    .kind {
-      display: inline-block;
-      margin-bottom: 5px;
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 800;
-      text-transform: uppercase;
+    .selected .radio {
+      border-color: var(--blue);
+      box-shadow: inset 0 0 0 6px white;
+      background: var(--blue);
     }
 
-    .hidden { display: none; }
-    .player-link {
-      width: 100%;
+    .competency-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
     }
 
-    body.player-only .grid {
-      grid-template-columns: 1fr;
-      max-width: 720px;
-      margin: 0 auto;
-      width: 100%;
-    }
-
-    body.player-only #masterPanel,
-    body.player-only #sidePanel,
-    body.player-only #tableSelect,
-    body.player-only .tabs {
-      display: none;
-    }
-
-    body.player-only .table-row {
-      justify-content: center;
+    .competency-card {
+      border: 3px solid #9bdcca;
+      border-radius: 20px;
+      padding: 18px;
+      min-height: 210px;
+      background: linear-gradient(180deg, #99ddce 0 48%, #fffdf4 49%);
+      position: relative;
+      display: grid;
+      align-content: end;
       text-align: center;
+      cursor: pointer;
+      box-shadow: var(--soft-shadow);
     }
 
-    body.master-mode .grid {
-      grid-template-columns: 320px 1fr 300px;
+    .competency-card.ai {
+      border-color: #8fd8ed;
+      background: linear-gradient(180deg, #8ad9e6 0 48%, #fffdf4 49%);
     }
 
-    body.setup-mode .grid {
-      grid-template-columns: minmax(320px, 620px);
-      justify-content: start;
+    .competency-card.individual {
+      border-color: #ffb375;
+      background: linear-gradient(180deg, #ffc082 0 48%, #fffdf4 49%);
     }
 
-    body.setup-mode #playPanel,
-    body.setup-mode #sidePanel,
-    body.setup-mode #resetBlock,
-    body.setup-mode #stepsBlock,
-    body.setup-mode #masterStatus {
-      display: none;
+    .competency-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(6, 75, 216, .18), var(--soft-shadow);
     }
 
-    .status { min-height: 20px; color: var(--muted); }
-    .status.error { color: var(--red); font-weight: 800; }
-    .status.waiting { color: #7c3aed; font-weight: 800; }
+    .competency-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--blue);
+      color: white;
+      font-size: 22px;
+      font-weight: 900;
+    }
 
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
-      .competencies { grid-template-columns: 1fr; }
+    .competency-icon {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90px;
+      height: 90px;
+      border-radius: 48% 52% 45% 55%;
+      background: #fffdeb;
+      display: grid;
+      place-items: center;
+      font-size: 42px;
+    }
+
+    .tag {
+      width: max-content;
+      margin: 0 auto 10px;
+      padding: 7px 16px;
+      border-radius: 999px;
+      background: #fffdeb;
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .ai .tag { color: var(--blue); }
+    .individual .tag { color: var(--orange); }
+
+    .selected-box {
+      background: #fff9f0;
+      border: 2px solid #eadfce;
+      border-radius: 20px;
+      padding: 22px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--mint);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .ethic-card {
+      min-height: 320px;
+      text-align: center;
+      border-color: var(--yellow);
+      background-color: #fff9e5;
+    }
+
+    .plans { display: grid; gap: 14px; }
+
+    .summary-card,
+    .table-card {
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255,255,255,.92);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-card {
+      grid-template-columns: 62px 1fr;
+      align-items: start;
+    }
+
+    .table-card.ok { border-color: var(--green); }
+    .table-card.pending { border-color: var(--orange); }
+
+    .status-pill {
+      width: max-content;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: #e7f8ef;
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .status-pill.pending { background: #fff1dc; color: #c05621; }
+    .status-pill.wait { background: #eef2f8; color: #657089; }
+
+    .master-only .player-screen,
+    .player-only .master-screen { display: none; }
+
+    @media (max-width: 1100px) {
+      .layout, .welcome, .situation-layout, .two-col { grid-template-columns: 1fr; }
+      .competency-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .topbar { grid-template-columns: 1fr; }
+      .table-pill { justify-self: start; }
+    }
+
+    @media (max-width: 720px) {
+      .app { width: min(100vw - 18px, 680px); }
+      .panel, .game-card, .question-panel { padding: 18px; border-radius: 18px; }
+      .step-rail, .competency-grid { grid-template-columns: 1fr; }
+      .situation-text { margin-left: 0; margin-top: 26px; }
+      .person, .situation-card::before { opacity: .18; }
+      .rule { grid-template-columns: 42px 54px 1fr; }
     }
   </style>
 </head>
-<body>
+<body class="master-only">
   <main class="app">
-    <header>
-      <div>
-        <h1>Jeu en étapes</h1>
-        <p class="muted">Le maître crée les tables, suit les réponses et débloque les étapes successives.</p>
+    <header class="topbar">
+      <div class="brand">
+        <span class="scribble" aria-hidden="true"></span>
+        <div>
+          <h1>Les mécaniques réflexives</h1>
+          <p class="muted" id="modeSubtitle">Interface maître du jeu</p>
+        </div>
       </div>
-      <nav class="tabs">
-        <button class="secondary" id="masterBtn" type="button">Maître du jeu</button>
-        <button class="secondary" id="playerBtn" type="button">Joueur</button>
-      </nav>
+      <div class="table-pill" id="tablePill">Table 1</div>
+      <div class="mode-switch">
+        <button class="active" id="masterMode" type="button">Maître du jeu</button>
+        <button id="playerMode" type="button">Joueur</button>
+      </div>
     </header>
 
-    <section class="grid">
-      <aside class="panel stack" id="masterPanel">
+    <section class="master-screen layout">
+      <aside class="panel stack">
         <h2>Maître du jeu</h2>
-        <form class="stack" id="createTablesForm">
-          <label>
-            Nombre de tables
-            <input id="tableCount" type="number" min="1" max="20" value="3" required>
-          </label>
-          <div class="stack" id="tableNameFields"></div>
-          <button class="blue" type="submit">Lancer le jeu</button>
-        </form>
+        <label class="setup-field">
+          Nombre de tables
+          <input id="tableCount" type="number" min="1" max="8" value="3">
+        </label>
+        <div class="stack" id="tableNames"></div>
+        <button id="launchBtn" type="button">▶ Lancer le jeu</button>
 
-        <div class="steps" id="resetBlock">
-          <h3>Réinitialisation</h3>
-          <button class="red" id="resetGameBtn" type="button">Réinitialiser le jeu</button>
-        </div>
-
-        <div class="steps" id="stepsBlock">
-          <h3>Étapes</h3>
-          <button class="step-item" data-master-step="1" type="button"><span class="step-number">1</span><span>Découvrir la situation</span></button>
-          <button class="step-item" data-master-step="2" type="button"><span class="step-number">2</span><span>Mobiliser les compétences</span></button>
-          <button class="step-item" data-master-step="3" type="button"><span class="step-number">3</span><span>Plan d'action et réponse</span></button>
-          <button class="step-item" data-master-step="4" type="button"><span class="step-number">4</span><span>Bilan des réponses</span></button>
-        </div>
-        <p class="status" id="masterStatus"></p>
+        <h3>Étapes</h3>
+        <div class="stack" id="masterSteps"></div>
+        <button class="red" id="resetBtn" type="button">↻ Réinitialiser le jeu</button>
       </aside>
 
-      <section class="panel stack" id="playPanel">
-        <div class="table-row">
+      <section class="panel stack">
+        <h2 id="overviewTitle">Vue d’ensemble - Table 1</h2>
+        <label class="setup-field">
+          Sélectionner la table
+          <select id="tableSelect"></select>
+        </label>
+        <div class="summary-card">
+          <span class="blob-icon">🔓</span>
           <div>
-            <h2 id="mainTitle">Tables de jeu</h2>
-            <p class="muted" id="mainSubtitle">Sélectionne une table pour répondre.</p>
+            <h3>Étape débloquée : <span id="unlockedLabel">Situation</span></h3>
+            <p class="muted">Le maître avance tout le jeu en même temps. Chaque table ne voit la suite que lorsqu’elle a envoyé sa réponse.</p>
           </div>
-          <select id="tableSelect" aria-label="Table"></select>
         </div>
-
-        <div class="stack" id="playerView">
-          <section class="stack hidden" id="masterOverview">
-            <h2>Vue d'ensemble de la table</h2>
-            <div class="overview-list" id="overviewList"></div>
-          </section>
-
-          <div class="player-nav hidden" id="playerStepNav">
-            <button class="secondary" id="previousStepBtn" type="button">Étape précédente</button>
-            <span class="badge" id="visibleStepLabel">Étape 1/4</span>
-            <button class="secondary" id="nextStepBtn" type="button">Étape suivante</button>
-          </div>
-          <div class="step-tabs" id="playerStepTabs"></div>
-
-          <section class="stack hidden" id="playerIntro">
-            <h2>Bienvenue</h2>
-            <div class="panel">
-              <h3>Règles du jeu</h3>
-              <p class="muted">Vous allez avancer en trois étapes successives. Lisez la situation, répondez avec votre table, puis attendez que le maître du jeu ouvre la suite.</p>
-            </div>
-            <button class="blue" id="discoverSituationBtn" type="button">Découvrir la situation</button>
-          </section>
-
-          <section class="stack" id="step1">
-            <h2>Étape 1 - Situation</h2>
-            <div class="panel">
-              <h3>Situation</h3>
-              <p class="muted">Une équipe doit organiser une réponse face à une situation complexe. Les informations sont partielles, les contraintes changent vite, et plusieurs acteurs doivent coopérer.</p>
-            </div>
-            <h3>D'après vous, quels sont les éléments importants ?</h3>
-            <div class="choices" id="step1Choices"></div>
-            <button class="blue" id="saveStep1" type="button">Valider la réponse</button>
-          </section>
-
-          <section class="stack hidden" id="step2">
-            <h2>Étape 2 - Compétences</h2>
-            <p class="muted" id="selectedChoiceText"></p>
-            <h3>Quelles compétences mobiliser ? Sélectionnez exactement <span id="requiredCount">3</span> compétence(s).</h3>
-            <div class="competencies" id="competenciesList"></div>
-            <button class="blue" id="saveStep2" type="button">Valider les compétences</button>
-          </section>
-
-          <section class="stack hidden" id="step3">
-            <h2>Étape 3 - Plan d'action</h2>
-            <p class="muted">Trois propositions sont générées à partir du choix de l'étape 1 et des compétences sélectionnées.</p>
-            <div class="plans" id="plansList"></div>
-            <label>
-              Votre réponse finale
-              <textarea id="finalPlan" placeholder="Adaptez ou rédigez votre plan d'action..."></textarea>
-            </label>
-            <button class="green" id="saveStep3" type="button">Envoyer la réponse</button>
-          </section>
-
-          <section class="stack hidden" id="step4">
-            <h2>Bilan des réponses</h2>
-            <div class="plans" id="summaryList"></div>
-          </section>
-        </div>
-        <p class="status" id="playerStatus"></p>
+        <div id="overviewResponses" class="stack"></div>
       </section>
 
-      <aside class="panel stack" id="sidePanel">
-        <h2>Tableau de validation</h2>
-        <form class="stack" id="addTableForm">
-          <label>
-            Ajouter une table
-            <input id="newTableName" maxlength="60" placeholder="Ex. Groupe A">
-          </label>
-          <button type="submit">Ajouter la table</button>
-        </form>
-        <div id="tablesList" class="stack"></div>
+      <aside class="panel stack">
+        <h2>Suivi des tables</h2>
+        <p class="muted">État d’avancement des groupes et liens à envoyer.</p>
+        <div id="tableCards" class="stack"></div>
+        <button id="unlockBtn" type="button">🔒 Débloquer l’étape suivante</button>
       </aside>
+    </section>
+
+    <section class="player-screen stack">
+      <nav class="step-rail" id="playerSteps"></nav>
+
+      <section class="game-card welcome" id="introScreen">
+        <div class="card-fan" aria-hidden="true">
+          <span class="playing-card"></span>
+          <span class="playing-card"></span>
+          <span class="playing-card"></span>
+        </div>
+        <div>
+          <h2>Bienvenue - <span data-table-name>Table 1</span></h2>
+          <p class="muted">Répondez à l’étape débloquée par le maître du jeu.</p>
+          <div class="rule-list">
+            <article class="rule"><span class="round">1</span><span class="blob-icon">⌕</span><p><strong>Découvrez la situation</strong><br><span class="muted">Lisez la carte et identifiez les éléments importants.</span></p></article>
+            <article class="rule"><span class="round">2</span><span class="blob-icon" style="background:#c8f5d1">✺</span><p><strong>Mobilisez les compétences</strong><br><span class="muted">Sélectionnez exactement 3 compétences.</span></p></article>
+            <article class="rule"><span class="round">3</span><span class="blob-icon" style="background:#b8eef8">☑</span><p><strong>Construisez votre réponse</strong><br><span class="muted">Choisissez une proposition ou rédigez votre plan.</span></p></article>
+          </div>
+          <button id="startPlayerBtn" type="button">✦ Découvrir la situation</button>
+        </div>
+      </section>
+
+      <section class="situation-layout hidden" id="step1">
+        <article class="situation-card">
+          <div class="card-label">Situation 1</div>
+          <div class="person" aria-hidden="true"></div>
+          <div class="situation-text">
+            <p><strong>Philibert</strong> est un jeune homme âgé de 28 ans, en situation de handicap psychique.</p>
+            <p>Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel.</p>
+            <p>Il rencontre des difficultés avec les interactions sociales, la prise d’initiatives et la gestion des tâches administratives.</p>
+          </div>
+        </article>
+        <article class="question-panel stack">
+          <h2>Découvrir la situation</h2>
+          <h3>D’après vous, quels sont les éléments importants ?</h3>
+          <div class="stack options">
+            <article class="option selected"><span class="radio"></span><span>Clarifier les besoins prioritaires et les risques immédiats</span></article>
+            <article class="option"><span class="radio"></span><span>Identifier uniquement les ressources matérielles disponibles</span></article>
+            <article class="option"><span class="radio"></span><span>Reporter la décision pour obtenir toutes les informations</span></article>
+          </div>
+          <textarea placeholder="Ou proposez votre propre réponse..."></textarea>
+          <button id="validateStep1" type="button">Valider la réponse →</button>
+        </article>
+      </section>
+
+      <section class="stack hidden" id="step2">
+        <div class="question-panel stack">
+          <h2>Étape 2 - Analyser</h2>
+          <p class="muted"><strong>Choix retenu :</strong> clarifier les besoins prioritaires et les risques immédiats.</p>
+          <h3>Quelles compétences mobiliser ? Sélectionnez exactement 3 compétence(s).</h3>
+          <div class="competency-grid" id="competencies"></div>
+          <div class="selected-box">
+            <strong>Votre sélection - <span id="selectedCount">3</span>/3</strong>
+            <div class="chip-row" id="selectedChips"></div>
+          </div>
+          <button id="validateStep2" type="button">Valider les compétences →</button>
+        </div>
+      </section>
+
+      <section class="two-col hidden" id="step3">
+        <article class="question-panel stack">
+          <h2>Étape 3 - Concevoir un plan d’action</h2>
+          <div class="chip-row" id="planChips"></div>
+          <p>Choisissez une proposition ou rédigez votre propre plan d’action.</p>
+          <div class="plans">
+            <article class="option"><span class="radio"></span><span>Plan 1 - Prioriser les besoins, mobiliser les compétences sélectionnées, puis organiser une action courte.</span></article>
+            <article class="option selected"><span class="radio"></span><span>Plan 2 - Répartir les rôles, vérifier les risques, puis décider d’une action commune.</span></article>
+            <article class="option"><span class="radio"></span><span>Plan 3 - Comparer les options, formaliser une réponse et prévoir un point de suivi.</span></article>
+          </div>
+          <textarea>Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.</textarea>
+          <button class="green" id="validateStep3" type="button">Envoyer la réponse ✈</button>
+        </article>
+        <article class="ethic-card">
+          <div class="card-label" style="margin:auto">Carte éthique 1</div>
+          <h2 style="margin-top:50px">Pouvoir d’agir et autonomie</h2>
+          <p style="margin-top:28px;font-size:22px;line-height:1.45">Ma proposition laisse-t-elle une place active à Philibert ?</p>
+        </article>
+      </section>
+
+      <section class="two-col hidden" id="step4">
+        <article class="game-card stack">
+          <h2>Bilan des réponses</h2>
+          <div class="summary-card"><span class="blob-icon">👤</span><div><h3>Situation initiale</h3><p>Philibert est un jeune homme âgé de 28 ans, en situation de handicap psychique. Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel.</p></div></div>
+          <div class="summary-card"><span class="blob-icon">☑</span><div><h3>Éléments importants</h3><p>Clarifier les besoins prioritaires et les risques immédiats.</p></div></div>
+          <div class="summary-card"><span class="blob-icon">✺</span><div><h3>Compétences mobilisées</h3><div class="chip-row"><span class="chip">Écoute active</span><span class="chip">Recherche d’informations avec IA</span><span class="chip">Synthèse assistée par IA</span></div></div></div>
+          <div class="summary-card"><span class="blob-icon">🎯</span><div><h3>Plan d’action final</h3><p>Répartir les rôles, vérifier les risques, puis décider d’une action commune.</p></div></div>
+        </article>
+        <article class="ethic-card">
+          <div class="card-label" style="margin:auto">Hypothèse de travail 1</div>
+          <p style="margin-top:55px;font-size:21px;line-height:1.45">On peut proposer un accompagnement fondé sur une posture de « faire avec » afin d’impliquer progressivement Philibert dans ses démarches.</p>
+        </article>
+      </section>
     </section>
   </main>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    const SUPABASE_URL = "https://lwydkmmscheyfbkakbmf.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_OXzFUUHdq_VYLXA_EE5ZsQ__7wGL60k";
-    const GITHUB_PAGES_URL = "https://schiouar.github.io/Maitre_du_jeu/";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const step1Options = [
-      "Clarifier les besoins prioritaires et les risques immédiats",
-      "Identifier uniquement les ressources matérielles disponibles",
-      "Reporter la décision pour obtenir toutes les informations"
+  <script>
+    const steps = ["Situation", "Compétences", "Plan d’action", "Bilan"];
+    const skillCards = [
+      ["Écoute active", "Compétence collective", "🙌", "collective"],
+      ["Travail en réseau", "Compétence collective", "◎", "collective"],
+      ["Médiation", "Compétence individuelle", "♙", "individual"],
+      ["Recherche d’informations avec IA", "Compétence I.A", "🤖", "ai"],
+      ["Synthèse assistée par IA", "Compétence I.A", "✦", "ai"],
+      ["Aide à la rédaction avec IA", "Compétence I.A", "✎", "ai"]
     ];
 
-    const initialSituation = "Une équipe doit organiser une réponse face à une situation complexe. Les informations sont partielles, les contraintes changent vite, et plusieurs acteurs doivent coopérer.";
+    let currentMode = "master";
+    let launched = false;
+    let unlockedStep = 0;
+    let visibleStep = 0;
+    let tables = ["Table 1", "Table 2", "Table 3"];
+    let selectedTable = 0;
+    let selectedSkills = [0, 3, 4];
+    const tableProgress = [2, 1, 0];
 
-    const competencies = [
-      { name: "Écoute active", kind: "Sans IA" },
-      { name: "Analyse de la situation", kind: "Sans IA" },
-      { name: "Travail en réseau", kind: "Sans IA" },
-      { name: "Recherche d'informations avec IA", kind: "Avec IA" },
-      { name: "Synthèse assistée par IA", kind: "Avec IA" },
-      { name: "Aide à la rédaction avec IA", kind: "Avec IA" }
-    ];
-
-    const requiredCompetencies = 3;
-    let tables = [];
-    let responses = [];
-    let selectedTableId = "";
-    let selectedCompetencies = [];
-    let playerOnlyMode = false;
-    let visibleStep = 1;
-    let waitingForNextStep = false;
-
+    const body = document.body;
+    const tableCount = document.querySelector("#tableCount");
+    const tableNames = document.querySelector("#tableNames");
     const tableSelect = document.querySelector("#tableSelect");
-    const tablesList = document.querySelector("#tablesList");
-    const step1Choices = document.querySelector("#step1Choices");
-    const competenciesList = document.querySelector("#competenciesList");
-    const plansList = document.querySelector("#plansList");
-    const masterOverview = document.querySelector("#masterOverview");
-    const overviewList = document.querySelector("#overviewList");
-    const playerIntro = document.querySelector("#playerIntro");
-    const discoverSituationBtn = document.querySelector("#discoverSituationBtn");
-    const summaryList = document.querySelector("#summaryList");
-    const playerStatus = document.querySelector("#playerStatus");
-    const masterStatus = document.querySelector("#masterStatus");
-    const playerStepNav = document.querySelector("#playerStepNav");
-    const previousStepBtn = document.querySelector("#previousStepBtn");
-    const nextStepBtn = document.querySelector("#nextStepBtn");
-    const visibleStepLabel = document.querySelector("#visibleStepLabel");
-    const playerStepTabs = document.querySelector("#playerStepTabs");
-    const saveStep1Btn = document.querySelector("#saveStep1");
-    const saveStep2Btn = document.querySelector("#saveStep2");
-    const saveStep3Btn = document.querySelector("#saveStep3");
-    const tableCountInput = document.querySelector("#tableCount");
-    const tableNameFields = document.querySelector("#tableNameFields");
-    const stepLabels = [
-      "Situation",
-      "Compétences",
-      "Plan d'action",
-      "Bilan"
-    ];
+    const tableCards = document.querySelector("#tableCards");
+    const masterSteps = document.querySelector("#masterSteps");
+    const playerSteps = document.querySelector("#playerSteps");
 
-    document.querySelector("#requiredCount").textContent = requiredCompetencies;
-    tableCountInput.addEventListener("input", renderTableNameFields);
+    document.querySelector("#masterMode").addEventListener("click", () => switchMode("master"));
+    document.querySelector("#playerMode").addEventListener("click", () => switchMode("player"));
+    document.querySelector("#launchBtn").addEventListener("click", () => { launched = true; unlockedStep = 1; visibleStep = 0; render(); });
+    document.querySelector("#resetBtn").addEventListener("click", () => { launched = false; unlockedStep = 0; visibleStep = 0; render(); });
+    document.querySelector("#unlockBtn").addEventListener("click", () => { if (launched) unlockedStep = Math.min(4, unlockedStep + 1); render(); });
+    document.querySelector("#startPlayerBtn").addEventListener("click", () => { visibleStep = 1; render(); });
+    document.querySelector("#validateStep1").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 1); visibleStep = Math.min(unlockedStep, 2); render(); });
+    document.querySelector("#validateStep2").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 2); visibleStep = Math.min(unlockedStep, 3); render(); });
+    document.querySelector("#validateStep3").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 3); visibleStep = Math.min(unlockedStep, 4); render(); });
+    tableCount.addEventListener("input", syncTableInputs);
+    tableSelect.addEventListener("change", () => { selectedTable = Number(tableSelect.value); render(); });
 
-    document.querySelector("#createTablesForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const names = Array.from(tableNameFields.querySelectorAll("input"))
-        .map((input, index) => input.value.trim() || `Table ${index + 1}`);
-      if (new Set(names).size !== names.length) {
-        return setMasterStatus("Chaque table doit avoir un nom différent.", true);
+    document.addEventListener("click", (event) => {
+      const option = event.target.closest(".option");
+      if (option && !option.closest("#step2")) {
+        option.parentElement.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
+        option.classList.add("selected");
       }
-
-      const deleteResult = await supabase.from("game_tables").delete().neq("table_name", "");
-      if (deleteResult.error) return setMasterStatus("Impossible de nettoyer l'ancien jeu avant lancement.", true);
-      const rows = names.map((name) => ({
-        table_name: name,
-        current_step: 1
-      }));
-
-      const { error } = await supabase.from("game_tables").insert(rows);
-      if (error) return setMasterStatus("Impossible de lancer le jeu.", true);
-      await refresh();
-      setMasterStatus(`${names.length} table(s) prête(s).`);
-    });
-
-    discoverSituationBtn.addEventListener("click", () => {
-      const table = getSelectedTable();
-      if (table) localStorage.setItem(getIntroStorageKey(table.id), "seen");
-      render();
-    });
-
-    document.querySelector("#addTableForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const input = document.querySelector("#newTableName");
-      const tableName = input.value.trim();
-      if (!tableName) return setMasterStatus("Indique un nom de table.", true);
-
-      const currentStep = getGlobalStep();
-      const { error } = await supabase
-        .from("game_tables")
-        .insert({ table_name: tableName, current_step: currentStep });
-
-      if (error) return setMasterStatus("Impossible d'ajouter cette table. Le nom existe peut-être déjà.", true);
-      input.value = "";
-      await refresh();
-      setMasterStatus(`${tableName} ajoutée.`);
-    });
-
-    document.querySelector("#resetGameBtn").addEventListener("click", async () => {
-      if (!confirm("Réinitialiser le jeu ? Toutes les tables et toutes les réponses seront supprimées.")) return;
-      const { error } = await supabase
-        .from("game_tables")
-        .delete()
-        .neq("table_name", "");
-
-      if (error) return setMasterStatus("Impossible de réinitialiser le jeu.", true);
-      tables = [];
-      responses = [];
-      selectedTableId = "";
-      visibleStep = 1;
-      await refresh();
-      setMasterStatus("Jeu réinitialisé.");
-    });
-
-    document.querySelectorAll("[data-master-step]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        const table = getSelectedTable();
-        if (!table) return;
-        const step = Number(button.dataset.masterStep);
-        if (step <= table.current_step) {
-          visibleStep = step;
-          render();
-          return;
-        }
-        if (step === table.current_step + 1) {
-          await unlockStepForAll(step);
-        }
-      });
-    });
-
-    tableSelect.addEventListener("change", () => {
-      selectedTableId = tableSelect.value;
-      visibleStep = getSelectedTable()?.current_step || 1;
-      render();
-    });
-
-    previousStepBtn.addEventListener("click", () => {
-      visibleStep = Math.max(1, visibleStep - 1);
-      render();
-    });
-
-    nextStepBtn.addEventListener("click", () => {
-      const table = getSelectedTable();
-      const response = getSelectedResponse();
-      visibleStep = Math.min(getAccessibleStep(table, response), visibleStep + 1);
-      render();
-    });
-
-    playerStepTabs.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-player-step]");
-      if (!button || button.disabled) return;
-      visibleStep = Number(button.dataset.playerStep);
-      render();
-    });
-
-    document.querySelector("#saveStep1").addEventListener("click", async () => {
-      const selected = document.querySelector(".choice.selected")?.dataset.value;
-      if (!playerOnlyMode) return;
-      if (!selected) return setPlayerStatus("Choisis une réponse.", true);
-      const { error } = await upsertResponse({ step1_choice: selected });
-      if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 1.", true);
-      waitingForNextStep = true;
-      await refresh();
-      if (visibleStep === 1) setPlayerStatus("Étape 1 enregistrée. Attente du déblocage de l'étape 2...", false, true);
-    });
-
-    document.querySelector("#saveStep2").addEventListener("click", async () => {
-      if (!playerOnlyMode) return;
-      if (selectedCompetencies.length !== requiredCompetencies) {
-        return setPlayerStatus(`Sélectionne exactement ${requiredCompetencies} compétences.`, true);
+      const card = event.target.closest("[data-skill]");
+      if (!card) return;
+      const index = Number(card.dataset.skill);
+      if (selectedSkills.includes(index)) {
+        selectedSkills = selectedSkills.filter((item) => item !== index);
+      } else if (selectedSkills.length < 3) {
+        selectedSkills.push(index);
       }
-      const { error } = await upsertResponse({ step2_competencies: selectedCompetencies });
-      if (error) return setPlayerStatus("Impossible d'enregistrer l'étape 2.", true);
-      waitingForNextStep = true;
-      await refresh();
-      if (visibleStep === 2) setPlayerStatus("Compétences enregistrées. Attente du déblocage de l'étape 3...", false, true);
+      renderSkills();
     });
 
-    document.querySelector("#saveStep3").addEventListener("click", async () => {
-      const plan = document.querySelector("#finalPlan").value.trim();
-      if (!playerOnlyMode) return;
-      if (!plan) return setPlayerStatus("Rédige ou choisis un plan d'action.", true);
-      const generated = getGeneratedPlans();
-      const { error } = await upsertResponse({ step3_plan: plan, generated_plans: generated });
-      if (error) return setPlayerStatus("Impossible d'enregistrer le plan.", true);
-      waitingForNextStep = true;
-      await refresh();
-      if (visibleStep === 3) setPlayerStatus("Réponse finale enregistrée. Attente du déblocage du bilan...", false, true);
-    });
+    function switchMode(mode) {
+      currentMode = mode;
+      body.classList.toggle("master-only", mode === "master");
+      body.classList.toggle("player-only", mode === "player");
+      document.querySelector("#masterMode").classList.toggle("active", mode === "master");
+      document.querySelector("#playerMode").classList.toggle("active", mode === "player");
+      document.querySelector("#modeSubtitle").textContent = mode === "master" ? "Interface maître du jeu" : "Interface joueur";
+      if (mode === "player" && launched && visibleStep === 0) visibleStep = 0;
+      render();
+    }
 
-    function renderStaticChoices() {
-      step1Choices.innerHTML = "";
-      step1Options.forEach((option) => {
-        const item = document.createElement("article");
-        item.className = "choice";
-        item.dataset.value = option;
-        item.textContent = option;
-        item.addEventListener("click", () => {
-          if (!playerOnlyMode) return;
-          document.querySelectorAll(".choice").forEach((node) => node.classList.remove("selected"));
-          item.classList.add("selected");
+    function syncTableInputs() {
+      const count = Math.max(1, Math.min(8, Number(tableCount.value) || 1));
+      const current = [...tableNames.querySelectorAll("input")].map((input) => input.value.trim());
+      tables = Array.from({ length: count }, (_, index) => current[index] || tables[index] || `Table ${index + 1}`);
+      renderTableInputs();
+      render();
+    }
+
+    function renderTableInputs() {
+      tableNames.innerHTML = "";
+      tables.forEach((name, index) => {
+        const label = document.createElement("label");
+        label.className = "setup-field";
+        label.innerHTML = `<span>Nom table ${index + 1}</span><input value="${escapeHtml(name)}">`;
+        label.querySelector("input").addEventListener("input", (event) => {
+          tables[index] = event.target.value || `Table ${index + 1}`;
+          renderTables(false);
         });
-        step1Choices.append(item);
+        tableNames.append(label);
       });
-
-      competenciesList.innerHTML = "";
-      competencies.forEach((competency) => {
-        const item = document.createElement("article");
-        item.className = "competency";
-        item.dataset.value = competency.name;
-        item.innerHTML = `<span class="kind"></span><strong></strong>`;
-        item.querySelector(".kind").textContent = competency.kind;
-        item.querySelector("strong").textContent = competency.name;
-        item.addEventListener("click", () => toggleCompetency(competency.name, item));
-        competenciesList.append(item);
-      });
-    }
-
-    function toggleCompetency(name, item) {
-      if (!playerOnlyMode) return;
-      if (selectedCompetencies.includes(name)) {
-        selectedCompetencies = selectedCompetencies.filter((value) => value !== name);
-        item.classList.remove("selected");
-        return;
-      }
-      if (selectedCompetencies.length >= requiredCompetencies) return setPlayerStatus(`Maximum ${requiredCompetencies} compétences.`, true);
-      selectedCompetencies.push(name);
-      item.classList.add("selected");
-    }
-
-    async function upsertResponse(values) {
-      return supabase
-        .from("game_responses")
-        .upsert({ table_id: selectedTableId, ...values }, { onConflict: "table_id" });
-    }
-
-    async function unlockStepForAll(step) {
-      if (!tables.length) return setMasterStatus("Crée au moins une table.", true);
-      const { error } = await supabase
-        .from("game_tables")
-        .update({ current_step: step })
-        .neq("table_name", "");
-
-      if (error) return setMasterStatus("Impossible de débloquer cette étape.", true);
-      visibleStep = step;
-      await refresh();
-      setMasterStatus(`Étape ${step} débloquée pour toutes les tables.`);
-    }
-
-    async function refresh() {
-      const tablesResult = await supabase.from("game_tables").select("*").order("table_name", { ascending: true });
-      const responsesResult = await supabase.from("game_responses").select("*");
-      if (tablesResult.error || responsesResult.error) {
-        setPlayerStatus("Connexion Supabase impossible. Exécute le SQL du fichier supabase-schema.sql.", true);
-        return;
-      }
-      tables = tablesResult.data || [];
-      responses = responsesResult.data || [];
-      if (!selectedTableId && tables.length) selectedTableId = tables[0].id;
-      selectTableFromUrl();
-      const table = getSelectedTable();
-      const response = getSelectedResponse();
-      const accessibleStep = getAccessibleStep(table, response);
-      if (playerOnlyMode && waitingForNextStep && accessibleStep > visibleStep) {
-        visibleStep = accessibleStep;
-        waitingForNextStep = false;
-        setPlayerStatus(`${stepLabels[visibleStep - 1]} disponible.`);
-      }
-      if (table) visibleStep = Math.min(Math.max(visibleStep, 1), accessibleStep);
-      render();
     }
 
     function render() {
-      setAppMode();
+      document.querySelector("#tablePill").textContent = tables[selectedTable] || "Table 1";
+      document.querySelectorAll("[data-table-name]").forEach((node) => node.textContent = tables[selectedTable] || "Table 1");
       renderTables();
-      renderCurrentTable();
+      renderSteps();
+      renderPlayerScreen();
+      renderSkills();
     }
 
-    function setAppMode() {
-      document.body.classList.toggle("master-mode", !playerOnlyMode);
-      document.body.classList.toggle("setup-mode", !playerOnlyMode && tables.length === 0);
-    }
-
-    function renderTableNameFields() {
-      const count = Math.max(1, Math.min(20, Number(tableCountInput.value) || 1));
-      const existingValues = Array.from(tableNameFields.querySelectorAll("input")).map((input) => input.value);
-      tableNameFields.innerHTML = "";
-
-      for (let index = 0; index < count; index += 1) {
-        const label = document.createElement("label");
-        label.textContent = `Nom table ${index + 1}`;
-        const input = document.createElement("input");
-        input.maxLength = 60;
-        input.value = existingValues[index] || `Table ${index + 1}`;
-        label.append(input);
-        tableNameFields.append(label);
+    function renderTables(rebuildSelect = true) {
+      if (rebuildSelect) {
+        tableSelect.innerHTML = tables.map((name, index) => `<option value="${index}" ${index === selectedTable ? "selected" : ""}>${escapeHtml(name)}</option>`).join("");
       }
-    }
-
-    function renderTables() {
-      tableSelect.innerHTML = "";
-      tablesList.innerHTML = "";
-      tables.forEach((table) => {
-        const option = document.createElement("option");
-        option.value = table.id;
-        option.textContent = table.table_name;
-        option.selected = table.id === selectedTableId;
-        tableSelect.append(option);
-
-        const response = getResponse(table.id);
-        const card = document.createElement("article");
-        card.className = "table-card";
-        if (table.id === selectedTableId) card.classList.add("active");
-        card.innerHTML = `
-          <div class="table-row"><input class="table-name-input" aria-label="Nom de table"><span class="badge"></span></div>
-          <p class="muted"></p>
-          <button class="secondary" type="button">Sélectionner</button>
-          <button class="secondary player-link" type="button">Copier le lien joueur</button>
-          <button class="red" data-delete type="button">Supprimer la table</button>
-        `;
-        const nameInput = card.querySelector(".table-name-input");
-        nameInput.value = table.table_name;
-        card.querySelector(".badge").textContent = `Étape ${table.current_step}`;
-        card.querySelector("p").innerHTML = statusFor(response);
-        card.querySelector("button").addEventListener("click", () => {
-          selectedTableId = table.id;
-          visibleStep = table.current_step;
-          updateTableUrl(table.id, false);
-          render();
-        });
-        card.querySelector(".player-link").addEventListener("click", async () => {
-          await copyText(getTableUrl(table.id));
-          setMasterStatus(`Lien joueur copié pour ${table.table_name}.`);
-        });
-        nameInput.addEventListener("keydown", async (event) => {
-          if (event.key !== "Enter") return;
-          event.preventDefault();
-          await renameTable(table.id, nameInput.value);
-        });
-        card.querySelector("[data-delete]").addEventListener("click", async () => {
-          if (!confirm(`Supprimer ${table.table_name} et toutes ses réponses ?`)) return;
-          const { error } = await supabase
-            .from("game_tables")
-            .delete()
-            .eq("id", table.id);
-          if (error) return setMasterStatus("Impossible de supprimer cette table.", true);
-          if (selectedTableId === table.id) selectedTableId = "";
-          await refresh();
-          setMasterStatus("Table supprimée.");
-        });
-        tablesList.append(card);
-      });
-    }
-
-    async function renameTable(tableId, value) {
-      const nextName = value.trim();
-      if (!nextName) return setMasterStatus("Le nom de table ne peut pas être vide.", true);
-      const { error } = await supabase
-        .from("game_tables")
-        .update({ table_name: nextName })
-        .eq("id", tableId);
-      if (error) return setMasterStatus("Impossible de renommer cette table. Le nom existe peut-être déjà.", true);
-      selectedTableId = tableId;
-      await refresh();
-      setMasterStatus("Table renommée.");
-    }
-
-    function renderCurrentTable() {
-      const table = getSelectedTable();
-      const response = getSelectedResponse();
-      if (!table) {
-        renderEmptyMasterSteps();
-        document.querySelector("#mainTitle").textContent = "Tables de jeu";
-        document.querySelector("#mainSubtitle").textContent = "Crée des tables pour démarrer.";
-        document.querySelector("#step1").classList.add("hidden");
-        document.querySelector("#step2").classList.add("hidden");
-        document.querySelector("#step3").classList.add("hidden");
-        document.querySelector("#step4").classList.add("hidden");
-        playerStepTabs.innerHTML = "";
-        return;
-      }
-      const accessibleStep = getAccessibleStep(table, response);
-      visibleStep = Math.min(Math.max(visibleStep, 1), playerOnlyMode ? accessibleStep : table.current_step);
-
-      document.querySelector("#mainTitle").textContent = table.table_name;
-      document.querySelector("#mainSubtitle").textContent = playerOnlyMode
-        ? "Répondez à l'étape débloquée par le maître du jeu."
-        : "Vue d'ensemble des réponses de la table.";
-      document.querySelectorAll("[data-master-step]").forEach((line) => {
-        const step = Number(line.dataset.masterStep);
-        line.classList.toggle("active", table.current_step === step);
-        line.classList.toggle("done", table.current_step > step);
-        line.classList.toggle("next", step === table.current_step + 1);
-        line.classList.toggle("future", step > table.current_step + 1);
-        line.disabled = step > table.current_step + 1;
-      });
-
-      if (!playerOnlyMode) {
-        renderMasterOverview(table, response);
-        return;
-      }
-
-      masterOverview.classList.add("hidden");
-      const shouldShowIntro = visibleStep === 1 && !response?.step1_choice && !hasSeenIntro(table.id);
-      playerIntro.classList.toggle("hidden", !shouldShowIntro);
-      playerStepNav.classList.toggle("hidden", accessibleStep === 1);
-      visibleStepLabel.textContent = `Étape ${visibleStep}/4`;
-      previousStepBtn.disabled = visibleStep <= 1;
-      nextStepBtn.disabled = visibleStep >= accessibleStep;
-
-      document.querySelector("#step1").classList.toggle("hidden", shouldShowIntro || visibleStep !== 1);
-      document.querySelector("#step2").classList.toggle("hidden", visibleStep !== 2);
-      document.querySelector("#step3").classList.toggle("hidden", visibleStep !== 3);
-      document.querySelector("#step4").classList.toggle("hidden", visibleStep !== 4);
-      renderPlayerStepTabs(shouldShowIntro ? 0 : accessibleStep);
-
-      document.querySelectorAll(".choice").forEach((item) => {
-        item.classList.toggle("selected", item.dataset.value === response?.step1_choice);
-      });
-
-      selectedCompetencies = response?.step2_competencies || [];
-      document.querySelectorAll(".competency").forEach((item) => {
-        item.classList.toggle("selected", selectedCompetencies.includes(item.dataset.value));
-      });
-
-      document.querySelector("#selectedChoiceText").textContent = response?.step1_choice
-        ? `Choix retenu : ${response.step1_choice}`
-        : "Commencez par valider l'étape 1.";
-
-      const masterReadOnly = !playerOnlyMode;
-      saveStep1Btn.disabled = masterReadOnly || Boolean(response?.step1_choice);
-      saveStep2Btn.disabled = masterReadOnly || Boolean(response?.step2_competencies?.length);
-      saveStep3Btn.disabled = masterReadOnly || Boolean(response?.step3_plan);
-      document.querySelector("#finalPlan").disabled = masterReadOnly;
-
-      renderPlans();
-      renderSummary();
-      document.querySelector("#finalPlan").value = response?.step3_plan || "";
-    }
-
-    function renderMasterOverview(table, response) {
-      masterOverview.classList.remove("hidden");
-      playerStepNav.classList.add("hidden");
-      playerStepTabs.innerHTML = "";
-      document.querySelector("#step1").classList.add("hidden");
-      document.querySelector("#step2").classList.add("hidden");
-      document.querySelector("#step3").classList.add("hidden");
-      document.querySelector("#step4").classList.add("hidden");
-
+      document.querySelector("#overviewTitle").textContent = `Vue d’ensemble - ${tables[selectedTable] || "Table 1"}`;
+      document.querySelector("#unlockedLabel").textContent = steps[Math.max(0, unlockedStep - 1)] || "Avant lancement";
+      tableCards.innerHTML = tables.map((name, index) => {
+        const progress = tableProgress[index] || 0;
+        const status = progress >= Math.max(1, unlockedStep) ? ["ok", "Réponse reçue"] : progress > 0 ? ["pending", "En cours"] : ["wait", "En attente"];
+        return `<article class="table-card ${status[0]}">
+          <h3>${escapeHtml(name)}</h3>
+          <p class="muted">Étape actuelle : ${steps[Math.max(0, Math.min(unlockedStep - 1, progress))] || "en attente du lancement"}</p>
+          <span class="status-pill ${status[0] === "pending" ? "pending" : status[0] === "wait" ? "wait" : ""}">${status[1]}</span>
+          <button class="secondary" type="button" onclick="window.__selectTable(${index})">👁 Voir la réponse</button>
+          <button class="secondary" type="button" onclick="navigator.clipboard && navigator.clipboard.writeText(location.href + '?table=${encodeURIComponent(name)}')">🔗 Copier le lien joueur</button>
+        </article>`;
+      }).join("");
       const rows = [
-        ["Étape débloquée par le maître", stepLabels[table.current_step - 1] || "Non démarrée"],
-        ["Étape atteinte par la table", stepLabels[getAccessibleStep(table, response) - 1] || "Non démarrée"],
-        ["Situation initiale", initialSituation],
-        ["Éléments importants", response?.step1_choice || "Non renseigné"],
-        ["Compétences mobilisées", response?.step2_competencies?.join(", ") || "Non renseigné"],
-        ["Plan d'action final", response?.step3_plan || "Non renseigné"]
+        ["Situation initiale", "Philibert est un jeune homme âgé de 28 ans, en situation de handicap psychique. Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel."],
+        ["Éléments importants", tableProgress[selectedTable] >= 1 ? "Clarifier les besoins prioritaires et les risques immédiats." : "Non renseigné"],
+        ["Compétences mobilisées", tableProgress[selectedTable] >= 2 ? "Écoute active, Recherche d’informations avec IA, Synthèse assistée par IA" : "Non renseigné"],
+        ["Plan d’action final", tableProgress[selectedTable] >= 3 ? "Répartir les rôles, vérifier les risques, puis décider d’une action commune." : "Non renseigné"]
       ];
-
-      overviewList.innerHTML = "";
-      rows.forEach(([title, value]) => {
-        const card = document.createElement("article");
-        card.className = "overview-card";
-        card.innerHTML = `<strong></strong><p class="muted"></p>`;
-        card.querySelector("strong").textContent = title;
-        card.querySelector("p").textContent = value;
-        overviewList.append(card);
-      });
+      document.querySelector("#overviewResponses").innerHTML = rows.map(([title, text]) => `<article class="summary-card"><span class="blob-icon">✦</span><div><h3>${title}</h3><p class="muted">${text}</p></div></article>`).join("");
     }
 
-    function renderEmptyMasterSteps() {
-      document.querySelectorAll("[data-master-step]").forEach((line) => {
-        const step = Number(line.dataset.masterStep);
-        line.classList.toggle("active", false);
-        line.classList.toggle("done", false);
-        line.classList.toggle("next", false);
-        line.classList.toggle("future", true);
-        line.disabled = true;
-      });
+    window.__selectTable = (index) => {
+      selectedTable = index;
+      render();
+    };
+
+    function renderSteps() {
+      masterSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, unlockedStep)).join("");
+      playerSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, visibleStep || unlockedStep)).join("");
     }
 
-    function renderPlayerStepTabs(currentStep) {
-      playerStepTabs.innerHTML = "";
-      if (currentStep === 0) return;
-      stepLabels.forEach((label, index) => {
-        const step = index + 1;
-        const button = document.createElement("button");
-        button.className = "step-tab";
-        button.type = "button";
-        button.dataset.playerStep = step;
-        button.textContent = `${step}. ${label}`;
-        button.disabled = step > currentStep;
-        button.classList.toggle("active", step === visibleStep);
-        button.classList.toggle("done", step < currentStep);
-        playerStepTabs.append(button);
-      });
+    function stepMarkup(label, step, current) {
+      const state = !launched ? "future" : step < current ? "done" : step === current ? "current" : "future";
+      return `<div class="step ${state}"><span class="num">${state === "done" ? "✓" : step}</span><span>${step}. ${label}</span></div>`;
     }
 
-    function renderSummary() {
-      summaryList.innerHTML = "";
-      const response = getSelectedResponse();
-      const rows = [
-        ["Situation initiale", initialSituation],
-        ["Éléments importants", response?.step1_choice || "Non renseigné"],
-        ["Compétences", response?.step2_competencies?.join(", ") || "Non renseigné"],
-        ["Plan d'action final", response?.step3_plan || "Non renseigné"]
-      ];
-
-      rows.forEach(([title, value]) => {
-        const card = document.createElement("article");
-        card.className = "plan-card";
-        card.innerHTML = `<strong></strong><p class="muted"></p>`;
-        card.querySelector("strong").textContent = title;
-        card.querySelector("p").textContent = value;
-        summaryList.append(card);
-      });
-    }
-
-    function renderPlans() {
-      plansList.innerHTML = "";
-      getGeneratedPlans().forEach((plan) => {
-        const card = document.createElement("article");
-        card.className = "plan-card";
-        card.textContent = plan;
-        card.addEventListener("click", () => {
-          if (!playerOnlyMode) return;
-          document.querySelectorAll(".plan-card").forEach((node) => node.classList.remove("selected"));
-          card.classList.add("selected");
-          document.querySelector("#finalPlan").value = plan;
-        });
-        plansList.append(card);
-      });
-    }
-
-    function getGeneratedPlans() {
-      const response = getSelectedResponse();
-      const choice = response?.step1_choice || "les éléments importants identifiés";
-      const skills = (response?.step2_competencies || []).join(", ") || "les compétences sélectionnées";
-      return [
-        `Plan 1 : prioriser ${choice}, mobiliser ${skills}, puis organiser une première action courte et mesurable.`,
-        `Plan 2 : répartir les rôles autour de ${skills}, vérifier les risques liés à ${choice}, puis décider d'une action commune.`,
-        `Plan 3 : comparer les options possibles, utiliser ${skills}, formaliser une réponse et prévoir un point de suivi.`
-      ];
-    }
-
-    function getSelectedTable() {
-      return tables.find((table) => table.id === selectedTableId);
-    }
-
-    function getGlobalStep() {
-      return tables.reduce((max, table) => Math.max(max, table.current_step || 1), 1);
-    }
-
-    function getPlayerNextStep(response) {
-      if (!response?.step1_choice) return 1;
-      if ((response.step2_competencies || []).length !== requiredCompetencies) return 2;
-      if (!response.step3_plan) return 3;
-      return 4;
-    }
-
-    function getAccessibleStep(table, response) {
-      if (!table) return 1;
-      return Math.min(table.current_step, getPlayerNextStep(response));
-    }
-
-    function getIntroStorageKey(tableId) {
-      return `jeu-etapes-intro-${tableId}`;
-    }
-
-    function hasSeenIntro(tableId) {
-      return localStorage.getItem(getIntroStorageKey(tableId)) === "seen";
-    }
-
-    function selectTableFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const tableId = params.get("tableId");
-      const tableName = params.get("table");
-      if (!tableId && !tableName) {
-        playerOnlyMode = false;
-        document.body.classList.remove("player-only");
-        setAppMode();
+    function renderPlayerScreen() {
+      ["introScreen", "step1", "step2", "step3", "step4"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
+      if (!launched || visibleStep === 0) {
+        document.querySelector("#introScreen").classList.remove("hidden");
         return;
       }
-
-      const table = tables.find((item) => item.id === tableId)
-        || tables.find((item) => item.table_name === tableName);
-      if (!table) return;
-
-      const isNewTableSelection = selectedTableId !== table.id;
-      selectedTableId = table.id;
-      if (isNewTableSelection) {
-        const response = responses.find((item) => item.table_id === table.id);
-        visibleStep = getAccessibleStep(table, response);
-      }
-      playerOnlyMode = true;
-      document.body.classList.add("player-only");
+      document.querySelector(`#step${visibleStep}`).classList.remove("hidden");
     }
 
-    function getTableUrl(tableId) {
-      const url = new URL(GITHUB_PAGES_URL);
-      url.searchParams.set("tableId", tableId);
-      return url.toString();
+    function renderSkills() {
+      document.querySelector("#competencies").innerHTML = skillCards.map(([name, kind, icon, style], index) => `
+        <article class="competency-card ${style === "ai" ? "ai" : style === "individual" ? "individual" : ""} ${selectedSkills.includes(index) ? "selected" : ""}" data-skill="${index}">
+          <span class="competency-icon">${icon}</span>
+          <span class="tag">${kind}</span>
+          <h3>${name}</h3>
+        </article>`).join("");
+      const chips = selectedSkills.map((index) => `<span class="chip">${skillCards[index][0]}</span>`).join("");
+      document.querySelector("#selectedCount").textContent = selectedSkills.length;
+      document.querySelector("#selectedChips").innerHTML = chips;
+      document.querySelector("#planChips").innerHTML = chips;
+      document.querySelector("#validateStep2").disabled = selectedSkills.length !== 3;
     }
 
-    function updateTableUrl(tableId, playerMode) {
-      const url = new URL(window.location.href);
-      if (playerMode) {
-        url.searchParams.set("tableId", tableId);
-        url.searchParams.delete("table");
-      } else {
-        url.searchParams.delete("tableId");
-        url.searchParams.delete("table");
-      }
-      window.history.replaceState({}, "", url);
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
     }
 
-    async function copyText(text) {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        return;
-      }
-      window.prompt("Copie ce lien joueur :", text);
-    }
-
-    function getSelectedResponse() {
-      return responses.find((response) => response.table_id === selectedTableId);
-    }
-
-    function getResponse(tableId) {
-      return responses.find((response) => response.table_id === tableId);
-    }
-
-    function statusFor(response) {
-      if (!response) return '<span class="warn">Aucune réponse</span>';
-      const parts = [
-        response.step1_choice ? '<span class="ok">Étape 1 ok</span>' : '<span class="warn">Étape 1 vide</span>',
-        response.step2_competencies?.length ? '<span class="ok">Étape 2 ok</span>' : '<span class="warn">Étape 2 vide</span>',
-        response.step3_plan ? '<span class="ok">Étape 3 ok</span>' : '<span class="warn">Étape 3 vide</span>',
-        response.step3_plan ? '<span class="ok">Bilan prêt</span>' : '<span class="warn">Bilan incomplet</span>'
-      ];
-      return parts.join(" · ");
-    }
-
-    function setPlayerStatus(message, isError = false, isWaiting = false) {
-      playerStatus.textContent = message;
-      playerStatus.classList.toggle("error", isError);
-      playerStatus.classList.toggle("waiting", isWaiting);
-    }
-
-    function setMasterStatus(message, isError = false) {
-      masterStatus.textContent = message;
-      masterStatus.classList.toggle("error", isError);
-    }
-
-    renderStaticChoices();
-    renderTableNameFields();
-    await refresh();
-    setInterval(refresh, 5000);
+    renderTableInputs();
+    render();
   </script>
 </body>
 </html>

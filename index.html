@@ -587,10 +587,21 @@
     .status-pill.pending { background: #fff1dc; color: #c05621; }
     .status-pill.wait { background: #eef2f8; color: #657089; }
 
+    .player-feedback {
+      min-height: 52px;
+      border: 2px solid #cddbf3;
+      border-radius: 14px;
+      padding: 14px 18px;
+      background: #f5f8ff;
+      color: var(--blue-dark);
+      font-weight: 900;
+    }
+
     .setup-only .master-screen,
     .setup-only .player-screen,
     .setup-only #tablePill,
     .setup-only .mode-switch,
+    .master-only #tablePill,
     .master-only .setup-screen,
     .master-only .player-screen,
     .master-only .mode-switch,
@@ -622,7 +633,7 @@
         <span class="scribble" aria-hidden="true"></span>
         <div>
           <h1>Les mécaniques réflexives</h1>
-          <p class="muted" id="modeSubtitle">Interface maître du jeu</p>
+          <p class="muted" id="modeSubtitle">Création de la partie</p>
         </div>
       </div>
       <div class="table-pill" id="tablePill">Table 1</div>
@@ -764,6 +775,7 @@
           <p style="margin-top:55px;font-size:21px;line-height:1.45">On peut proposer un accompagnement fondé sur une posture de « faire avec » afin d’impliquer progressivement Philibert dans ses démarches.</p>
         </article>
       </section>
+      <p class="player-feedback hidden" id="playerFeedback"></p>
     </section>
   </main>
 
@@ -815,9 +827,9 @@
       render();
     });
     document.querySelector("#startPlayerBtn").addEventListener("click", () => { visibleStep = 1; render(); });
-    document.querySelector("#validateStep1").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 1); visibleStep = Math.min(unlockedStep, 2); render(); });
-    document.querySelector("#validateStep2").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 2); visibleStep = Math.min(unlockedStep, 3); render(); });
-    document.querySelector("#validateStep3").addEventListener("click", () => { tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], 3); visibleStep = Math.min(unlockedStep, 4); render(); });
+    document.querySelector("#validateStep1").addEventListener("click", () => validatePlayerStep(1));
+    document.querySelector("#validateStep2").addEventListener("click", () => validatePlayerStep(2));
+    document.querySelector("#validateStep3").addEventListener("click", () => validatePlayerStep(3));
     tableCount.addEventListener("input", syncTableInputs);
     tableSelect.addEventListener("change", () => { selectedTable = Number(tableSelect.value); render(); });
 
@@ -920,6 +932,7 @@
       url.search = "";
       url.searchParams.set("table", tables[index]);
       url.searchParams.set("role", "player");
+      url.searchParams.set("unlocked", unlockedStep || 1);
       if (navigator.clipboard) await navigator.clipboard.writeText(url.toString());
       alert(`Lien joueur copié pour ${tables[index]}`);
     };
@@ -935,12 +948,29 @@
     }
 
     function renderPlayerScreen() {
+      const feedback = document.querySelector("#playerFeedback");
+      feedback.classList.add("hidden");
       ["introScreen", "step1", "step2", "step3", "step4"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
       if (!launched || visibleStep === 0) {
         document.querySelector("#introScreen").classList.remove("hidden");
         return;
       }
       document.querySelector(`#step${visibleStep}`).classList.remove("hidden");
+    }
+
+    function validatePlayerStep(step) {
+      tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
+      const nextStep = step + 1;
+      const feedback = document.querySelector("#playerFeedback");
+      if (unlockedStep >= nextStep) {
+        visibleStep = nextStep;
+        feedback.textContent = `Réponse enregistrée. Étape ${nextStep} disponible.`;
+      } else {
+        visibleStep = step;
+        feedback.textContent = `Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`;
+      }
+      render();
+      feedback.classList.remove("hidden");
     }
 
     function renderSkills() {
@@ -965,10 +995,11 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("role") !== "player") return;
       const tableName = params.get("table");
+      const urlUnlockedStep = Number(params.get("unlocked"));
       const found = tables.findIndex((name) => name === tableName);
       selectedTable = found >= 0 ? found : 0;
       launched = true;
-      unlockedStep = 1;
+      unlockedStep = Math.max(1, Math.min(4, urlUnlockedStep || 1));
       visibleStep = 0;
       switchMode("player");
     }

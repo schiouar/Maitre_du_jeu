@@ -358,6 +358,54 @@
       overflow: hidden;
     }
 
+    .visual-reference {
+      border: 14px solid white;
+      border-radius: 26px;
+      background: white;
+      box-shadow: var(--soft-shadow);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .visual-reference img,
+    .asset-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .situation-layout .visual-reference img,
+    .two-col .visual-reference img {
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .visual-reference.card-source {
+      border-width: 10px;
+      align-self: start;
+    }
+
+    .asset-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .asset-card {
+      border: 2px solid #d8e2f2;
+      border-radius: 18px;
+      overflow: hidden;
+      background: white;
+      box-shadow: var(--soft-shadow);
+    }
+
+    .asset-card figcaption {
+      padding: 10px 12px;
+      color: var(--blue-dark);
+      font-weight: 900;
+      background: #fffbed;
+    }
+
     .situation-card::before {
       content: "";
       position: absolute;
@@ -634,6 +682,9 @@
       .situation-text { margin-left: 0; margin-top: 26px; }
       .person, .situation-card::before { opacity: .18; }
       .rule { grid-template-columns: 42px 54px 1fr; }
+      .asset-strip { grid-template-columns: 1fr; }
+      .situation-layout .visual-reference img,
+      .two-col .visual-reference img { min-height: 0; object-fit: contain; }
     }
   </style>
 </head>
@@ -697,17 +748,16 @@
 
     <section class="player-screen stack">
       <nav class="step-rail" id="playerSteps"></nav>
+      <p class="player-feedback" id="playerAvailability"></p>
       <div class="player-actions hidden" id="playerActions">
-        <button class="secondary" id="previousPlayerStep" type="button">← Étape précédente</button>
-        <button class="secondary" id="nextPlayerStep" type="button">Étape suivante →</button>
+        <button class="secondary" id="previousPlayerStep" onclick="window.__previousPlayerStep()" type="button">← Étape précédente</button>
+        <button class="secondary" id="nextPlayerStep" onclick="window.__nextPlayerStep()" type="button">Étape suivante →</button>
       </div>
 
       <section class="game-card welcome" id="introScreen">
-        <div class="card-fan" aria-hidden="true">
-          <span class="playing-card"></span>
-          <span class="playing-card"></span>
-          <span class="playing-card"></span>
-        </div>
+        <figure class="visual-reference" aria-label="Cartes du jeu">
+          <img src="assets/crops/etape-decouvrir.png" alt="Carte étape : découvrir la situation">
+        </figure>
         <div>
           <h2>Bienvenue - <span data-table-name>Table 1</span></h2>
           <p class="muted">Répondez à l’étape débloquée par le maître du jeu.</p>
@@ -716,19 +766,13 @@
             <article class="rule"><span class="round">2</span><span class="blob-icon" style="background:#c8f5d1">✺</span><p><strong>Mobilisez les compétences</strong><br><span class="muted">Sélectionnez exactement 3 compétences.</span></p></article>
             <article class="rule"><span class="round">3</span><span class="blob-icon" style="background:#b8eef8">☑</span><p><strong>Construisez votre réponse</strong><br><span class="muted">Choisissez une proposition ou rédigez votre plan.</span></p></article>
           </div>
-          <button id="startPlayerBtn" type="button">✦ Découvrir la situation</button>
+          <button id="startPlayerBtn" onclick="window.__startPlayer()" type="button">✦ Découvrir la situation</button>
         </div>
       </section>
 
       <section class="situation-layout hidden" id="step1">
-        <article class="situation-card">
-          <div class="card-label">Situation 1</div>
-          <div class="person" aria-hidden="true"></div>
-          <div class="situation-text">
-            <p><strong>Philibert</strong> est un jeune homme âgé de 28 ans, en situation de handicap psychique.</p>
-            <p>Il vit en logement autonome et bénéficie d’un accompagnement éducatif ponctuel.</p>
-            <p>Il rencontre des difficultés avec les interactions sociales, la prise d’initiatives et la gestion des tâches administratives.</p>
-          </div>
+        <article class="visual-reference">
+          <img src="assets/crops/situation-1.png" alt="Carte situation 1 : Philibert">
         </article>
         <article class="question-panel stack">
           <h2>Découvrir la situation</h2>
@@ -739,7 +783,7 @@
             <article class="option"><span class="radio"></span><span>Reporter la décision pour obtenir toutes les informations</span></article>
           </div>
           <textarea id="step1Custom" placeholder="Ou proposez votre propre réponse..."></textarea>
-          <button id="validateStep1" type="button">Valider la réponse →</button>
+          <button id="validateStep1" onclick="window.__validatePlayerStep(1)" type="button">Valider la réponse →</button>
         </article>
       </section>
 
@@ -748,12 +792,22 @@
           <h2>Étape 2 - Analyser</h2>
           <p class="muted"><strong>Choix retenu :</strong> clarifier les besoins prioritaires et les risques immédiats.</p>
           <h3>Quelles compétences mobiliser ? Sélectionnez exactement 3 compétence(s).</h3>
+          <div class="asset-strip">
+            <figure class="asset-card">
+              <img src="assets/crops/competence-collective.png" alt="Carte compétence collective">
+              <figcaption>Cartes compétences</figcaption>
+            </figure>
+            <figure class="asset-card">
+              <img src="assets/crops/competence-ia.png" alt="Carte compétence avec IA">
+              <figcaption>Cartes avec IA / sans IA</figcaption>
+            </figure>
+          </div>
           <div class="competency-grid" id="competencies"></div>
           <div class="selected-box">
             <strong>Votre sélection - <span id="selectedCount">3</span>/3</strong>
             <div class="chip-row" id="selectedChips"></div>
           </div>
-          <button id="validateStep2" type="button">Valider les compétences →</button>
+          <button id="validateStep2" onclick="window.__validatePlayerStep(2)" type="button">Valider les compétences →</button>
         </div>
       </section>
 
@@ -768,12 +822,10 @@
             <article class="option"><span class="radio"></span><span>Plan 3 - Comparer les options, formaliser une réponse et prévoir un point de suivi.</span></article>
           </div>
           <textarea id="step3Text">Nous proposons de répartir les rôles entre les partenaires, vérifier les risques et décider ensemble d’une première action commune.</textarea>
-          <button class="green" id="validateStep3" type="button">Envoyer la réponse ✈</button>
+          <button class="green" id="validateStep3" onclick="window.__validatePlayerStep(3)" type="button">Envoyer la réponse ✈</button>
         </article>
-        <article class="ethic-card">
-          <div class="card-label" style="margin:auto">Carte éthique 1</div>
-          <h2 style="margin-top:50px">Pouvoir d’agir et autonomie</h2>
-          <p style="margin-top:28px;font-size:22px;line-height:1.45">Ma proposition laisse-t-elle une place active à Philibert ?</p>
+        <article class="visual-reference">
+          <img src="assets/crops/ethique-1.png" alt="Carte éthique 1 : pouvoir d'agir et autonomie">
         </article>
       </section>
 
@@ -785,10 +837,14 @@
           <div class="summary-card"><span class="blob-icon">✺</span><div><h3>Compétences mobilisées</h3><div class="chip-row"><span class="chip">Écoute active</span><span class="chip">Recherche d’informations avec IA</span><span class="chip">Synthèse assistée par IA</span></div></div></div>
           <div class="summary-card"><span class="blob-icon">🎯</span><div><h3>Plan d’action final</h3><p>Répartir les rôles, vérifier les risques, puis décider d’une action commune.</p></div></div>
         </article>
-        <article class="ethic-card">
-          <div class="card-label" style="margin:auto">Hypothèse de travail 1</div>
-          <p style="margin-top:55px;font-size:21px;line-height:1.45">On peut proposer un accompagnement fondé sur une posture de « faire avec » afin d’impliquer progressivement Philibert dans ses démarches.</p>
+        <article class="visual-reference">
+          <img src="assets/crops/hypothese-4.png" alt="Carte hypothèse de travail">
         </article>
+      </section>
+      <section class="game-card stack hidden" id="waitingScreen">
+        <h2>Réponse enregistrée</h2>
+        <p class="muted" id="waitingText">Votre réponse est bien enregistrée. Attendez que le maître du jeu débloque la suite.</p>
+        <button class="secondary" onclick="window.__previousPlayerStep()" type="button">Relire l’étape précédente</button>
       </section>
       <p class="player-feedback hidden" id="playerFeedback"></p>
     </section>
@@ -809,11 +865,13 @@
     let launched = false;
     let unlockedStep = 0;
     let visibleStep = 0;
+    let playerWaitingStep = 0;
     let tables = ["Table 1", "Table 2", "Table 3"];
     let selectedTable = 0;
     let selectedSkills = [0, 3, 4];
     const tableProgress = [0, 0, 0];
     const tableResponses = [emptyResponse(), emptyResponse(), emptyResponse()];
+    const STORAGE_KEY = "mecaniques-reflexives-prototype-state";
 
     const body = document.body;
     const tableCount = document.querySelector("#tableCount");
@@ -827,32 +885,24 @@
       launched = true;
       unlockedStep = 1;
       visibleStep = 0;
+      saveState();
       switchMode("master");
     });
     document.querySelector("#resetBtn").addEventListener("click", () => {
       launched = false;
       unlockedStep = 0;
       visibleStep = 0;
+      playerWaitingStep = 0;
       selectedTable = 0;
       tableProgress.fill(0);
       tableResponses.forEach((response, index) => tableResponses[index] = emptyResponse());
+      saveState();
       switchMode("setup");
     });
     document.querySelector("#unlockBtn").addEventListener("click", () => {
       if (!launched) return;
       unlockedStep = Math.min(4, unlockedStep + 1);
-      render();
-    });
-    document.querySelector("#startPlayerBtn").addEventListener("click", () => { visibleStep = 1; render(); });
-    document.querySelector("#validateStep1").addEventListener("click", () => validatePlayerStep(1));
-    document.querySelector("#validateStep2").addEventListener("click", () => validatePlayerStep(2));
-    document.querySelector("#validateStep3").addEventListener("click", () => validatePlayerStep(3));
-    document.querySelector("#previousPlayerStep").addEventListener("click", () => {
-      visibleStep = Math.max(1, visibleStep - 1);
-      render();
-    });
-    document.querySelector("#nextPlayerStep").addEventListener("click", () => {
-      visibleStep = Math.min(getPlayerMaxStep(), visibleStep + 1);
+      saveState();
       render();
     });
     playerSteps.addEventListener("click", (event) => {
@@ -902,6 +952,7 @@
       tableProgress.length = count;
       tableResponses.length = count;
       selectedTable = Math.min(selectedTable, count - 1);
+      saveState();
       renderTableInputs();
       render();
     }
@@ -914,6 +965,7 @@
         label.innerHTML = `<span>Nom table ${index + 1}</span><input value="${escapeHtml(name)}">`;
         label.querySelector("input").addEventListener("input", (event) => {
           tables[index] = event.target.value || `Table ${index + 1}`;
+          saveState();
           renderTables(false);
         });
         tableNames.append(label);
@@ -974,6 +1026,11 @@
       alert(`Lien joueur copié pour ${tables[index]}`);
     };
 
+    window.__startPlayer = () => startPlayer();
+    window.__validatePlayerStep = (step) => validatePlayerStep(step);
+    window.__previousPlayerStep = () => previousPlayerStep();
+    window.__nextPlayerStep = () => nextPlayerStep();
+
     function renderSteps() {
       masterSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, unlockedStep)).join("");
       const maxStep = getPlayerMaxStep();
@@ -991,11 +1048,20 @@
 
     function renderPlayerScreen() {
       const feedback = document.querySelector("#playerFeedback");
+      updatePlayerAvailability();
       feedback.classList.add("hidden");
-      ["introScreen", "step1", "step2", "step3", "step4"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
+      ["introScreen", "step1", "step2", "step3", "step4", "waitingScreen"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
       if (!launched || visibleStep === 0) {
         document.querySelector("#playerActions").classList.add("hidden");
         document.querySelector("#introScreen").classList.remove("hidden");
+        return;
+      }
+      if (playerWaitingStep) {
+        document.querySelector("#playerActions").classList.remove("hidden");
+        document.querySelector("#previousPlayerStep").disabled = false;
+        document.querySelector("#nextPlayerStep").disabled = true;
+        document.querySelector("#waitingText").textContent = `Votre réponse à l'étape ${playerWaitingStep} est enregistrée. Attendez que le maître du jeu débloque ${steps[playerWaitingStep]}.`;
+        document.querySelector("#waitingScreen").classList.remove("hidden");
         return;
       }
       const response = getTableResponse(selectedTable);
@@ -1010,13 +1076,21 @@
       document.querySelector(`#step${visibleStep}`).classList.remove("hidden");
     }
 
+    function startPlayer() {
+      playerWaitingStep = 0;
+      visibleStep = Math.max(1, getPlayerMaxStep());
+      render();
+    }
+
     function validatePlayerStep(step) {
+      playerWaitingStep = 0;
       const response = getTableResponse(selectedTable);
       if (step === 1) {
         const selectedText = document.querySelector("#step1 .option.selected span:last-child")?.textContent.trim();
         const customText = document.querySelector("#step1Custom").value.trim();
         response.step1 = customText || selectedText || "";
         response.customStep1 = customText;
+        if (!response.step1) return showPlayerFeedback("Choisissez une réponse ou écrivez votre réponse avant de valider.");
       }
       if (step === 2) {
         if (selectedSkills.length !== 3) return showPlayerFeedback("Sélectionnez exactement 3 compétences avant de valider.");
@@ -1025,18 +1099,38 @@
       if (step === 3) {
         const selectedPlan = document.querySelector("#step3 .option.selected span:last-child")?.textContent.trim();
         response.plan = document.querySelector("#step3Text").value.trim() || selectedPlan || "";
+        if (!response.plan) return showPlayerFeedback("Choisissez un plan ou écrivez votre plan avant de valider.");
       }
       tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
       const nextStep = step + 1;
+      saveState();
       if (unlockedStep >= nextStep) {
         visibleStep = nextStep;
+        playerWaitingStep = 0;
         showPlayerFeedback(`Réponse enregistrée. Étape ${nextStep} disponible.`);
       } else {
         visibleStep = step;
+        playerWaitingStep = step;
         showPlayerFeedback(`Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
       }
       render();
       document.querySelector("#playerFeedback").classList.remove("hidden");
+    }
+
+    function previousPlayerStep() {
+      if (playerWaitingStep) {
+        visibleStep = playerWaitingStep;
+        playerWaitingStep = 0;
+      } else {
+        visibleStep = Math.max(1, visibleStep - 1);
+      }
+      render();
+    }
+
+    function nextPlayerStep() {
+      playerWaitingStep = 0;
+      visibleStep = Math.min(getPlayerMaxStep(), visibleStep + 1);
+      render();
     }
 
     function renderSkills() {
@@ -1052,6 +1146,25 @@
       document.querySelector("#selectedChips").innerHTML = chips;
       document.querySelector("#planChips").innerHTML = chips;
       document.querySelector("#validateStep2").disabled = selectedSkills.length !== 3;
+    }
+
+    function updatePlayerAvailability() {
+      const available = getPlayerMaxStep();
+      const progress = tableProgress[selectedTable] || 0;
+      const availability = document.querySelector("#playerAvailability");
+      if (!launched) {
+        availability.textContent = "Le jeu n'est pas encore lancé par le maître du jeu.";
+        return;
+      }
+      if (visibleStep === 0) {
+        availability.textContent = `${steps[0]} est disponible. Appuyez sur "Découvrir la situation" pour commencer.`;
+        return;
+      }
+      if (progress >= visibleStep && unlockedStep <= progress && visibleStep < 4) {
+        availability.textContent = `Réponse enregistrée. Vous attendez le maître du jeu pour débloquer ${steps[visibleStep]}.`;
+        return;
+      }
+      availability.textContent = `${steps[visibleStep - 1]} est disponible pour ${tables[selectedTable]}.`;
     }
 
     function getPlayerMaxStep() {
@@ -1076,6 +1189,7 @@
       const feedback = document.querySelector("#playerFeedback");
       feedback.textContent = message;
       feedback.classList.remove("hidden");
+      document.querySelector("#playerAvailability").textContent = message;
     }
 
     function syncSelectedOptions(response) {
@@ -1109,6 +1223,41 @@
       switchMode("player");
     }
 
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        launched,
+        unlockedStep,
+        playerWaitingStep,
+        tables,
+        tableProgress,
+        tableResponses
+      }));
+    }
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!saved) return;
+        launched = Boolean(saved.launched);
+        unlockedStep = Number(saved.unlockedStep) || 0;
+        playerWaitingStep = Number(saved.playerWaitingStep) || 0;
+        if (Array.isArray(saved.tables) && saved.tables.length) tables = saved.tables;
+        if (Array.isArray(saved.tableProgress)) {
+          tableProgress.length = 0;
+          saved.tableProgress.forEach((value) => tableProgress.push(Number(value) || 0));
+        }
+        if (Array.isArray(saved.tableResponses)) {
+          tableResponses.length = 0;
+          saved.tableResponses.forEach((value) => tableResponses.push({ ...emptyResponse(), ...value }));
+        }
+        tableCount.value = tables.length;
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    renderTableInputs();
+    loadState();
     renderTableInputs();
     bootFromUrl();
     render();

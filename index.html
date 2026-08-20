@@ -80,7 +80,13 @@
 
     button.green { background: linear-gradient(135deg, var(--green), #08714f); }
     button.red { background: linear-gradient(135deg, #e11d48, #b91c1c); }
-    button:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+    button:disabled {
+      background: #d8dee8;
+      color: #718096;
+      cursor: not-allowed;
+      box-shadow: none;
+      border-color: #d8dee8;
+    }
 
     input, textarea, select {
       width: 100%;
@@ -802,7 +808,7 @@
 
       <section class="game-card welcome" id="introScreen">
         <figure class="visual-reference source-card" aria-label="Cartes du jeu">
-          <img src="assets/cards/CARTES_ALL.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/ethique-1-back.png';" alt="Carte règle du jeu">
+          <img src="assets/cards/derived/ethique-1-back.png" alt="Carte règle du jeu">
         </figure>
         <div>
           <h2>Bienvenue - <span data-table-name>Table 1</span></h2>
@@ -818,7 +824,7 @@
 
       <section class="situation-layout hidden" id="step1">
         <article class="visual-reference situation-source">
-          <img src="assets/cards/CARTES_ALL-31.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/situation-1.png';" alt="Carte situation 1 : Philibert">
+          <img src="assets/cards/derived/situation-1.png" alt="Carte situation 1 : Philibert">
         </article>
         <article class="question-panel stack">
           <h2>Découvrir la situation</h2>
@@ -840,11 +846,11 @@
           <h3>Quelles compétences mobiliser ? Sélectionnez exactement 3 compétence(s).</h3>
           <div class="asset-strip">
             <figure class="asset-card source-card">
-              <img src="assets/cards/CARTES_ALL-18.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/competence-collective-front.png';" alt="Carte mobiliser les compétences">
+              <img src="assets/cards/derived/competence-collective-front.png" alt="Carte mobiliser les compétences">
               <figcaption>Cartes compétences</figcaption>
             </figure>
             <figure class="asset-card source-card">
-              <img src="assets/cards/CARTES_ALL-17.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/competence-ia-front.png';" alt="Carte compétence collective">
+              <img src="assets/cards/derived/competence-ia-front.png" alt="Carte compétence collective">
               <figcaption>Cartes avec IA / sans IA</figcaption>
             </figure>
           </div>
@@ -871,7 +877,7 @@
           <button class="green" id="validateStep3" onclick="window.__validatePlayerStep(3)" type="button">Envoyer la réponse ✈</button>
         </article>
         <article class="visual-reference">
-          <img src="assets/cards/CARTES_ALL-20.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/ethique-1.png';" alt="Carte éthique 1 : pouvoir d'agir et autonomie">
+          <img src="assets/cards/derived/ethique-1.png" alt="Carte éthique 1 : pouvoir d'agir et autonomie">
         </article>
       </section>
 
@@ -884,7 +890,7 @@
           <div class="summary-card"><span class="blob-icon">🎯</span><div><h3>Plan d’action final</h3><p>Répartir les rôles, vérifier les risques, puis décider d’une action commune.</p></div></div>
         </article>
         <article class="visual-reference">
-          <img id="hypothesisVisual" src="assets/cards/CARTES_ALL-19.jpg" onerror="this.onerror=null;this.src='assets/cards/derived/hypothese-1.png';" alt="Carte hypothèse de travail">
+          <img id="hypothesisVisual" src="assets/cards/derived/hypothese-1.png" alt="Carte hypothèse de travail">
         </article>
       </section>
       <section class="game-card stack hidden" id="waitingScreen">
@@ -899,48 +905,48 @@
   <script>
     const steps = ["Situation", "Compétences", "Plan d’action", "Bilan"];
     const skillCards = [
-      { name: "Écoute active", kind: "Compétence collective", type: "collective", source: "assets/cards/CARTES_ALL-02.jpg", fallback: "assets/cards/derived/competence-collective-1.png", logo: "assets/cards/CARTES_ALL-01.jpg", logoFallback: "assets/cards/derived/competence-collective-front.png" },
-      { name: "Travail en réseau", kind: "Compétence collective", type: "collective", source: "assets/cards/CARTES_ALL-04.jpg", fallback: "assets/cards/derived/competence-collective-2.png", logo: "assets/cards/CARTES_ALL-01.jpg", logoFallback: "assets/cards/derived/competence-collective-front.png" },
-      { name: "Médiation", kind: "Compétence individuelle", type: "individual", source: "assets/cards/CARTES_ALL-06.jpg", fallback: "assets/cards/derived/competence-individuelle-1.png", logo: "assets/cards/CARTES_ALL-05.jpg", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
-      { name: "Accueillir et soutenir la parole", kind: "Compétence individuelle", type: "individual", source: "assets/cards/CARTES_ALL-08.jpg", fallback: "assets/cards/derived/competence-individuelle-2.png", logo: "assets/cards/CARTES_ALL-05.jpg", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
-      { name: "Recherche d’informations avec IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/CARTES_ALL-10.jpg", fallback: "assets/cards/derived/competence-ia-1.png", logo: "assets/cards/CARTES_ALL-09.jpg", logoFallback: "assets/cards/derived/competence-ia-front.png" },
-      { name: "Synthèse assistée par IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/CARTES_ALL-12.jpg", fallback: "assets/cards/derived/competence-ia-2.png", logo: "assets/cards/CARTES_ALL-09.jpg", logoFallback: "assets/cards/derived/competence-ia-front.png" }
+      { name: "Écoute active", kind: "Compétence collective", type: "collective", source: "assets/cards/derived/competence-collective-1.png", fallback: "assets/cards/derived/competence-collective-1.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Travail en réseau", kind: "Compétence collective", type: "collective", source: "assets/cards/derived/competence-collective-2.png", fallback: "assets/cards/derived/competence-collective-2.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Médiation", kind: "Compétence individuelle", type: "individual", source: "assets/cards/derived/competence-individuelle-1.png", fallback: "assets/cards/derived/competence-individuelle-1.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Accueillir et soutenir la parole", kind: "Compétence individuelle", type: "individual", source: "assets/cards/derived/competence-individuelle-2.png", fallback: "assets/cards/derived/competence-individuelle-2.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Recherche d’informations avec IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/derived/competence-ia-1.png", fallback: "assets/cards/derived/competence-ia-1.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" },
+      { name: "Synthèse assistée par IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/derived/competence-ia-2.png", fallback: "assets/cards/derived/competence-ia-2.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" }
     ];
 
     const planBank = [
       {
         needs: ["collective", "individual"],
-        card: "assets/cards/CARTES_ALL-19.jpg",
+        card: "assets/cards/derived/hypothese-1.png",
         fallback: "assets/cards/derived/hypothese-1.png",
         text: "Hypothèse 1 - Organiser un accompagnement progressif fondé sur le faire avec, puis renforcer l’autonomie par une première action concrète."
       },
       {
         needs: ["individual", "collective"],
-        card: "assets/cards/CARTES_ALL-21.jpg",
+        card: "assets/cards/derived/hypothese-2.png",
         fallback: "assets/cards/derived/hypothese-2.png",
         text: "Hypothèse 2 - Installer une médiation entre les acteurs, clarifier les rôles et soutenir une coordination commune autour de la situation."
       },
       {
         needs: ["ai"],
-        card: "assets/cards/CARTES_ALL-20.jpg",
+        card: "assets/cards/derived/hypothese-3.png",
         fallback: "assets/cards/derived/hypothese-3.png",
         text: "Hypothèse 3 - Évaluer les urgences, hiérarchiser les besoins et utiliser l’IA pour relier les informations utiles à la décision."
       },
       {
         needs: ["ai", "collective"],
-        card: "assets/cards/CARTES_ALL-36.jpg",
+        card: "assets/cards/derived/hypothese-4.png",
         fallback: "assets/cards/derived/hypothese-4.png",
         text: "Hypothèse 4 - Mobiliser les ressources du territoire, expliciter les notions complexes avec l’IA et formuler une réponse partagée."
       },
       {
         needs: ["collective"],
-        card: "assets/cards/CARTES_ALL-29.jpg",
+        card: "assets/cards/derived/hypothese-2.png",
         fallback: "assets/cards/derived/hypothese-2.png",
         text: "Hypothèse 5 - Mettre en commun les observations, identifier les partenaires clés et décider d’un point de suivi collectif."
       },
       {
         needs: ["individual", "ai"],
-        card: "assets/cards/CARTES_ALL-28.jpg",
+        card: "assets/cards/derived/hypothese-3.png",
         fallback: "assets/cards/derived/hypothese-3.png",
         text: "Hypothèse 6 - Repérer les risques, questionner les biais de lecture avec l’aide de l’IA et préparer une action adaptée."
       }
@@ -1002,6 +1008,8 @@
     document.addEventListener("click", (event) => {
       const option = event.target.closest(".option");
       if (option && !option.closest("#step2")) {
+        const optionStep = option.closest("#step3") ? 3 : option.closest("#step1") ? 1 : 0;
+        if (optionStep && (tableProgress[selectedTable] || 0) >= optionStep) return;
         option.parentElement.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
         option.classList.add("selected");
         if (option.closest("#step3")) {
@@ -1013,6 +1021,7 @@
       }
       const card = event.target.closest("[data-skill]");
       if (!card) return;
+      if ((tableProgress[selectedTable] || 0) >= 2) return;
       const index = Number(card.dataset.skill);
       const response = getTableResponse(selectedTable);
       if (selectedSkills.includes(index)) {
@@ -1112,7 +1121,6 @@
       url.search = "";
       url.searchParams.set("table", tables[index]);
       url.searchParams.set("role", "player");
-      url.searchParams.set("unlocked", unlockedStep || 1);
       if (navigator.clipboard) await navigator.clipboard.writeText(url.toString());
       alert(`Lien joueur copié pour ${tables[index]}`);
     };
@@ -1139,6 +1147,11 @@
 
     function renderPlayerScreen() {
       const feedback = document.querySelector("#playerFeedback");
+      if (playerWaitingStep && unlockedStep >= playerWaitingStep + 1) {
+        visibleStep = Math.min(4, playerWaitingStep + 1);
+        playerWaitingStep = 0;
+        saveState();
+      }
       updatePlayerAvailability();
       feedback.classList.add("hidden");
       ["introScreen", "step1", "step2", "step3", "step4", "waitingScreen"].forEach((id) => document.querySelector(`#${id}`).classList.add("hidden"));
@@ -1165,6 +1178,7 @@
       document.querySelector("#step2 .muted").innerHTML = `<strong>Choix retenu :</strong> ${response.step1 || "à compléter à l'étape 1"}.`;
       syncSelectedOptions(response);
       updatePlayerSummary(response);
+      updateValidationButtons();
       document.querySelector(`#step${visibleStep}`).classList.remove("hidden");
     }
 
@@ -1177,6 +1191,22 @@
     function validatePlayerStep(step) {
       playerWaitingStep = 0;
       const response = getTableResponse(selectedTable);
+      const progress = tableProgress[selectedTable] || 0;
+      const nextStep = step + 1;
+      if (progress >= step && step < 4) {
+        if (unlockedStep >= nextStep) {
+          visibleStep = nextStep;
+          playerWaitingStep = 0;
+          saveState();
+          render();
+          return showPlayerFeedback(`Réponse déjà validée. Étape ${nextStep} disponible.`);
+        }
+        visibleStep = step;
+        playerWaitingStep = step;
+        saveState();
+        render();
+        return showPlayerFeedback(`Réponse déjà validée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
+      }
       if (step === 1) {
         const selectedText = document.querySelector("#step1 .option.selected span:last-child")?.textContent.trim();
         const customText = document.querySelector("#step1Custom").value.trim();
@@ -1195,7 +1225,6 @@
         if (!response.plan) return showPlayerFeedback("Choisissez un plan ou écrivez votre plan avant de valider.");
       }
       tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
-      const nextStep = step + 1;
       saveState();
       if (unlockedStep >= nextStep) {
         visibleStep = nextStep;
@@ -1208,6 +1237,35 @@
       }
       render();
       document.querySelector("#playerFeedback").classList.remove("hidden");
+    }
+
+    function updateValidationButtons() {
+      const progress = tableProgress[selectedTable] || 0;
+      const labels = {
+        1: "Valider la réponse →",
+        2: "Valider les compétences →",
+        3: "Envoyer la réponse ✈"
+      };
+      [1, 2, 3].forEach((step) => {
+        const button = document.querySelector(`#validateStep${step}`);
+        if (!button) return;
+        const completed = progress >= step;
+        const waitingNextStep = completed && unlockedStep < step + 1;
+        if (waitingNextStep) {
+          button.disabled = true;
+          button.textContent = "En attente du maître du jeu";
+          return;
+        }
+        if (completed) {
+          button.disabled = true;
+          button.textContent = "Réponse déjà validée";
+          return;
+        }
+        button.textContent = labels[step];
+        button.disabled = step === 2 ? selectedSkills.length !== 3 : false;
+      });
+      document.querySelector("#step1Custom").disabled = progress >= 1;
+      document.querySelector("#step3Text").disabled = progress >= 3;
     }
 
     function previousPlayerStep() {
@@ -1341,11 +1399,8 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get("role") !== "player") return;
       const tableName = params.get("table");
-      const urlUnlockedStep = Number(params.get("unlocked"));
       const found = tables.findIndex((name) => name === tableName);
       selectedTable = found >= 0 ? found : 0;
-      launched = true;
-      unlockedStep = Math.max(1, Math.min(4, urlUnlockedStep || 1));
       visibleStep = 0;
       switchMode("player");
     }
@@ -1354,7 +1409,6 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         launched,
         unlockedStep,
-        playerWaitingStep,
         tables,
         tableProgress,
         tableResponses
@@ -1367,7 +1421,6 @@
         if (!saved) return;
         launched = Boolean(saved.launched);
         unlockedStep = Number(saved.unlockedStep) || 0;
-        playerWaitingStep = Number(saved.playerWaitingStep) || 0;
         if (Array.isArray(saved.tables) && saved.tables.length) tables = saved.tables;
         if (Array.isArray(saved.tableProgress)) {
           tableProgress.length = 0;
@@ -1382,6 +1435,27 @@
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+
+    function refreshSharedState() {
+      const tableName = tables[selectedTable];
+      loadState();
+      const found = tables.indexOf(tableName);
+      selectedTable = found >= 0 ? found : Math.max(0, Math.min(selectedTable, tables.length - 1));
+      renderTableInputs();
+      render();
+    }
+
+    window.addEventListener("storage", (event) => {
+      if (event.key === STORAGE_KEY) refreshSharedState();
+    });
+
+    setInterval(() => {
+      if (currentMode !== "player") return;
+      const before = `${launched}|${unlockedStep}|${tableProgress[selectedTable] || 0}`;
+      loadState();
+      const after = `${launched}|${unlockedStep}|${tableProgress[selectedTable] || 0}`;
+      if (before !== after || playerWaitingStep) render();
+    }, 1500);
 
     renderTableInputs();
     loadState();

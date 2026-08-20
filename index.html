@@ -980,6 +980,7 @@
     let playerWaitingStep = 0;
     let manualStepNavigation = false;
     let tables = ["Table 1", "Table 2", "Table 3"];
+    let tableIds = ["table-1", "table-2", "table-3"];
     let selectedTable = 0;
     let selectedSkills = [0, 3, 4];
     const tableProgress = [0, 0, 0];
@@ -1008,6 +1009,7 @@
       playerWaitingStep = 0;
       manualStepNavigation = false;
       selectedTable = 0;
+      ensureTableIds();
       tableProgress.fill(0);
       tableResponses.forEach((response, index) => tableResponses[index] = emptyResponse());
       saveState();
@@ -1075,6 +1077,7 @@
       while (tableResponses.length < count) tableResponses.push(emptyResponse());
       tableProgress.length = count;
       tableResponses.length = count;
+      ensureTableIds();
       selectedTable = Math.min(selectedTable, count - 1);
       saveState();
       renderTableInputs();
@@ -1141,8 +1144,11 @@
     };
 
     window.__copyPlayerLink = async (index) => {
+      ensureTableIds();
       const url = new URL(window.location.href);
       url.search = "";
+      url.searchParams.set("tableId", tableIds[index]);
+      url.searchParams.set("tableIndex", String(index + 1));
       url.searchParams.set("table", tables[index]);
       url.searchParams.set("role", "player");
       if (navigator.clipboard) await navigator.clipboard.writeText(url.toString());
@@ -1171,6 +1177,11 @@
 
     function renderPlayerScreen() {
       const feedback = document.querySelector("#playerFeedback");
+      const startButton = document.querySelector("#startPlayerBtn");
+      if (startButton) {
+        startButton.disabled = !launched;
+        startButton.textContent = launched ? "✦ Découvrir la situation" : "En attente du maître du jeu";
+      }
       if (playerWaitingStep && unlockedStep >= playerWaitingStep + 1) {
         visibleStep = Math.min(4, playerWaitingStep + 1);
         playerWaitingStep = 0;
@@ -1207,6 +1218,11 @@
     }
 
     function startPlayer() {
+      if (!launched) {
+        visibleStep = 0;
+        render();
+        return;
+      }
       playerWaitingStep = 0;
       manualStepNavigation = false;
       visibleStep = getPlayerEntryStep();
@@ -1379,6 +1395,29 @@
       return Math.max(1, Math.min(getPlayerMaxStep(), progress + 1));
     }
 
+    function ensureTableIds() {
+      while (tableIds.length < tables.length) {
+        tableIds.push(`table-${tableIds.length + 1}`);
+      }
+      tableIds.length = tables.length;
+    }
+
+    function resolveTableIndex(ref) {
+      ensureTableIds();
+      if (ref.id) {
+        const byId = tableIds.indexOf(ref.id);
+        if (byId >= 0) return byId;
+      }
+      if (ref.name) {
+        const byName = tables.indexOf(ref.name);
+        if (byName >= 0) return byName;
+      }
+      if (Number.isInteger(ref.index) && ref.index >= 0 && ref.index < tables.length) {
+        return ref.index;
+      }
+      return Math.max(0, Math.min(selectedTable, tables.length - 1));
+    }
+
     function getTableResponse(index) {
       if (!tableResponses[index]) tableResponses[index] = emptyResponse();
       return tableResponses[index];
@@ -1422,9 +1461,11 @@
     function bootFromUrl() {
       const params = new URLSearchParams(window.location.search);
       if (params.get("role") !== "player") return;
-      const tableName = params.get("table");
-      const found = tables.findIndex((name) => name === tableName);
-      selectedTable = found >= 0 ? found : 0;
+      selectedTable = resolveTableIndex({
+        id: params.get("tableId"),
+        name: params.get("table"),
+        index: params.has("tableIndex") ? Number(params.get("tableIndex")) - 1 : null
+      });
       visibleStep = 0;
       manualStepNavigation = false;
       switchMode("player");
@@ -1435,6 +1476,7 @@
         launched,
         unlockedStep,
         tables,
+        tableIds,
         tableProgress,
         tableResponses
       }));
@@ -1447,6 +1489,8 @@
         launched = Boolean(saved.launched);
         unlockedStep = Number(saved.unlockedStep) || 0;
         if (Array.isArray(saved.tables) && saved.tables.length) tables = saved.tables;
+        if (Array.isArray(saved.tableIds)) tableIds = saved.tableIds;
+        ensureTableIds();
         if (Array.isArray(saved.tableProgress)) {
           tableProgress.length = 0;
           saved.tableProgress.forEach((value) => tableProgress.push(Number(value) || 0));
@@ -1462,10 +1506,16 @@
     }
 
     function refreshSharedState() {
+      ensureTableIds();
+      const tableId = tableIds[selectedTable];
       const tableName = tables[selectedTable];
       loadState();
-      const found = tables.indexOf(tableName);
-      selectedTable = found >= 0 ? found : Math.max(0, Math.min(selectedTable, tables.length - 1));
+      selectedTable = resolveTableIndex({ id: tableId, name: tableName, index: selectedTable });
+      if (currentMode === "player" && !launched) {
+        visibleStep = 0;
+        playerWaitingStep = 0;
+        manualStepNavigation = false;
+      }
       renderTableInputs();
       render();
     }

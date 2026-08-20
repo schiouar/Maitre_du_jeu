@@ -1185,9 +1185,10 @@
     function renderSteps() {
       masterSteps.innerHTML = steps.map((label, index) => stepMarkup(label, index + 1, unlockedStep)).join("");
       const maxStep = getPlayerMaxStep();
+      const progress = tableProgress[selectedTable] || 0;
       playerSteps.innerHTML = steps.map((label, index) => {
         const step = index + 1;
-        const state = step < visibleStep ? "done" : step === visibleStep ? "current" : "future";
+        const state = progress >= step ? "done" : step === visibleStep ? "current" : "future";
         return `<button class="step ${state}" data-player-step="${step}" type="button" ${step > maxStep ? "disabled" : ""}><span class="num">${state === "done" ? "✓" : step}</span><span>${step}. ${label}</span></button>`;
       }).join("");
     }

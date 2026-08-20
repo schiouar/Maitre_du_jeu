@@ -195,6 +195,11 @@
       position: relative;
     }
 
+    .panel.overview-focus {
+      border-color: var(--blue);
+      box-shadow: var(--shadow), 0 0 0 5px rgba(6, 75, 216, .16);
+    }
+
     .panel.soft { box-shadow: var(--soft-shadow); }
     .stack { display: grid; gap: 16px; }
     .hidden { display: none !important; }
@@ -796,7 +801,7 @@
         <button class="red" id="resetBtn" type="button">↻ Réinitialiser le jeu</button>
       </aside>
 
-      <section class="panel stack">
+      <section class="panel stack" id="overviewPanel" tabindex="-1">
         <h2 id="overviewTitle">Vue d’ensemble - Table 1</h2>
         <label class="setup-field">
           Sélectionner la table
@@ -982,6 +987,7 @@
     let tables = ["Table 1", "Table 2", "Table 3"];
     let tableIds = ["table-1", "table-2", "table-3"];
     let selectedTable = 0;
+    let overviewFocusTimer = 0;
     let selectedSkills = [0, 3, 4];
     const tableProgress = [0, 0, 0];
     const tableResponses = [emptyResponse(), emptyResponse(), emptyResponse()];
@@ -1123,7 +1129,7 @@
           <h3>${escapeHtml(name)}</h3>
           <p class="muted">Étape actuelle : ${steps[Math.max(0, Math.min(unlockedStep - 1, progress))] || "en attente du lancement"}</p>
           <span class="status-pill ${status[0] === "pending" ? "pending" : status[0] === "wait" ? "wait" : ""}">${status[1]}</span>
-          <button class="secondary" type="button" onclick="window.__selectTable(${index})">👁 Voir la réponse</button>
+          <button class="secondary" type="button" onclick="window.__viewTableResponse(${index})">👁 Voir la réponse</button>
           <button class="secondary" type="button" onclick="window.__copyPlayerLink(${index})">🔗 Copier le lien joueur</button>
         </article>`;
       }).join("");
@@ -1141,6 +1147,22 @@
     window.__selectTable = (index) => {
       selectedTable = index;
       render();
+    };
+
+    window.__viewTableResponse = (index) => {
+      selectedTable = index;
+      render();
+      requestAnimationFrame(() => {
+        const overviewPanel = document.querySelector("#overviewPanel");
+        if (!overviewPanel) return;
+        overviewPanel.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+        overviewPanel.focus({ preventScroll: true });
+        overviewPanel.classList.add("overview-focus");
+        window.clearTimeout(overviewFocusTimer);
+        overviewFocusTimer = window.setTimeout(() => {
+          overviewPanel.classList.remove("overview-focus");
+        }, 1400);
+      });
     };
 
     window.__copyPlayerLink = async (index) => {

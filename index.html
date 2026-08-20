@@ -1178,9 +1178,9 @@
         saveState();
       }
       const currentProgress = tableProgress[selectedTable] || 0;
-      const latestAvailableStep = getPlayerMaxStep();
-      if (!manualStepNavigation && currentProgress > 0 && visibleStep === currentProgress && currentProgress < latestAvailableStep) {
-        visibleStep = latestAvailableStep;
+      const nextAvailableStep = getPlayerMaxStep();
+      if (!manualStepNavigation && currentProgress > 0 && visibleStep === currentProgress && currentProgress < nextAvailableStep) {
+        visibleStep = nextAvailableStep;
       }
       updatePlayerAvailability();
       feedback.classList.add("hidden");
@@ -1239,23 +1239,21 @@
       tableProgress[selectedTable] = Math.max(previousProgress, step);
       saveState();
 
-      if (previousProgress > step) {
-        visibleStep = step;
-        render();
-        return showPlayerFeedback("Réponse mise à jour.");
-      }
-
       if (step < 4 && unlockedStep >= nextStep) {
         visibleStep = nextStep;
         playerWaitingStep = 0;
         render();
-        return showPlayerFeedback(`Réponse enregistrée. Étape ${nextStep} disponible.`);
+        return showPlayerFeedback(previousProgress >= step ? "Réponse mise à jour. Étape suivante disponible." : `Réponse enregistrée. Étape ${nextStep} disponible.`);
       } else {
         visibleStep = step;
         playerWaitingStep = step;
         render();
         return showPlayerFeedback(`Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
       }
+    }
+
+    function isWaitingForMaster(step, progress = tableProgress[selectedTable] || 0) {
+      return step >= 1 && step <= 3 && progress >= step && unlockedStep < step + 1;
     }
 
     function updateValidationButtons() {
@@ -1274,8 +1272,7 @@
         const button = document.querySelector(`#validateStep${step}`);
         if (!button) return;
         const completed = progress >= step;
-        const waitingNextStep = completed && step === progress && unlockedStep < step + 1;
-        if (waitingNextStep) {
+        if (isWaitingForMaster(step, progress)) {
           button.disabled = true;
           button.textContent = "En attente du maître du jeu";
           return;

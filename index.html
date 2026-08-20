@@ -343,7 +343,7 @@
     .situation-layout,
     .two-col {
       display: grid;
-      grid-template-columns: minmax(280px, 420px) 1fr;
+      grid-template-columns: minmax(320px, 560px) 1fr;
       gap: 28px;
       align-items: start;
     }
@@ -391,6 +391,18 @@
       object-fit: contain;
       object-position: center;
       background: transparent;
+    }
+
+    .visual-reference.situation-source {
+      display: grid;
+      place-items: center;
+    }
+
+    .visual-reference.situation-source img {
+      width: min(100%, 620px);
+      max-height: 72vh;
+      margin: 0 auto;
+      background: #fffdf4;
     }
 
     .visual-reference.card-source {
@@ -540,7 +552,7 @@
     .competency-card img {
       width: 100%;
       aspect-ratio: 1.42 / 1;
-      object-fit: cover;
+      object-fit: contain;
       border-radius: 0;
       box-shadow: none;
       background: var(--cream);
@@ -599,12 +611,13 @@
       display: block;
       width: 100%;
       aspect-ratio: 1.42 / 1;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center;
       box-shadow: none;
       border-radius: 0;
-      transform: scale(1.16) translateY(4%);
+      transform: none;
       transform-origin: center;
+      background: #fffdf4;
     }
 
     .competency-card .caption {
@@ -612,6 +625,14 @@
       gap: 6px;
       padding: 14px;
       background: #fffdf4;
+    }
+
+    .competency-card .caption p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 700;
     }
 
     .tag {
@@ -905,12 +926,12 @@
   <script>
     const steps = ["Situation", "Compétences", "Plan d’action", "Bilan"];
     const skillCards = [
-      { name: "Écoute active", kind: "Compétence collective", type: "collective", source: "assets/cards/derived/competence-collective-1.png", fallback: "assets/cards/derived/competence-collective-1.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
-      { name: "Travail en réseau", kind: "Compétence collective", type: "collective", source: "assets/cards/derived/competence-collective-2.png", fallback: "assets/cards/derived/competence-collective-2.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
-      { name: "Médiation", kind: "Compétence individuelle", type: "individual", source: "assets/cards/derived/competence-individuelle-1.png", fallback: "assets/cards/derived/competence-individuelle-1.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
-      { name: "Accueillir et soutenir la parole", kind: "Compétence individuelle", type: "individual", source: "assets/cards/derived/competence-individuelle-2.png", fallback: "assets/cards/derived/competence-individuelle-2.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
-      { name: "Recherche d’informations avec IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/derived/competence-ia-1.png", fallback: "assets/cards/derived/competence-ia-1.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" },
-      { name: "Synthèse assistée par IA", kind: "Compétence I.A", type: "ai", source: "assets/cards/derived/competence-ia-2.png", fallback: "assets/cards/derived/competence-ia-2.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" }
+      { name: "Écoute active", kind: "Compétence collective", type: "collective", description: "Recueillir avec attention les paroles, les besoins et les signaux faibles des personnes concernées.", source: "assets/cards/derived/competence-collective-1.png", fallback: "assets/cards/derived/competence-collective-1.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Travail en réseau", kind: "Compétence collective", type: "collective", description: "Coopérer avec les partenaires du territoire et partager les informations utiles à l’action commune.", source: "assets/cards/derived/competence-collective-2.png", fallback: "assets/cards/derived/competence-collective-2.png", logo: "assets/cards/derived/competence-collective-front.png", logoFallback: "assets/cards/derived/competence-collective-front.png" },
+      { name: "Médiation", kind: "Compétence individuelle", type: "individual", description: "Prévenir les tensions, clarifier les rôles et faciliter l’échange entre les différents interlocuteurs.", source: "assets/cards/derived/competence-individuelle-1.png", fallback: "assets/cards/derived/competence-individuelle-1.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Accueillir et soutenir la parole", kind: "Compétence individuelle", type: "individual", description: "Donner une place à l’expression de la personne et soutenir sa capacité d’agir dans la réponse.", source: "assets/cards/derived/competence-individuelle-2.png", fallback: "assets/cards/derived/competence-individuelle-2.png", logo: "assets/cards/derived/competence-individuelle-front.png", logoFallback: "assets/cards/derived/competence-individuelle-front.png" },
+      { name: "Recherche d’informations avec IA", kind: "Compétence I.A", type: "ai", description: "Identifier des sources pertinentes, comparer les informations et vérifier ce qui éclaire la décision.", source: "assets/cards/derived/competence-ia-1.png", fallback: "assets/cards/derived/competence-ia-1.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" },
+      { name: "Synthèse assistée par IA", kind: "Compétence I.A", type: "ai", description: "Structurer les idées, résumer les données et dégager des pistes d’action compréhensibles.", source: "assets/cards/derived/competence-ia-2.png", fallback: "assets/cards/derived/competence-ia-2.png", logo: "assets/cards/derived/competence-ia-front.png", logoFallback: "assets/cards/derived/competence-ia-front.png" }
     ];
 
     const planBank = [
@@ -957,6 +978,7 @@
     let unlockedStep = 0;
     let visibleStep = 0;
     let playerWaitingStep = 0;
+    let manualStepNavigation = false;
     let tables = ["Table 1", "Table 2", "Table 3"];
     let selectedTable = 0;
     let selectedSkills = [0, 3, 4];
@@ -984,6 +1006,7 @@
       unlockedStep = 0;
       visibleStep = 0;
       playerWaitingStep = 0;
+      manualStepNavigation = false;
       selectedTable = 0;
       tableProgress.fill(0);
       tableResponses.forEach((response, index) => tableResponses[index] = emptyResponse());
@@ -999,6 +1022,7 @@
     playerSteps.addEventListener("click", (event) => {
       const button = event.target.closest("[data-player-step]");
       if (!button || button.disabled) return;
+      manualStepNavigation = true;
       visibleStep = Number(button.dataset.playerStep);
       render();
     });
@@ -1009,7 +1033,6 @@
       const option = event.target.closest(".option");
       if (option && !option.closest("#step2")) {
         const optionStep = option.closest("#step3") ? 3 : option.closest("#step1") ? 1 : 0;
-        if (optionStep && (tableProgress[selectedTable] || 0) >= optionStep) return;
         option.parentElement.querySelectorAll(".option").forEach((item) => item.classList.remove("selected"));
         option.classList.add("selected");
         if (option.closest("#step3")) {
@@ -1018,10 +1041,10 @@
             fallback: option.dataset.planFallback
           });
         }
+        if (optionStep) updateValidationButtons();
       }
       const card = event.target.closest("[data-skill]");
       if (!card) return;
-      if ((tableProgress[selectedTable] || 0) >= 2) return;
       const index = Number(card.dataset.skill);
       const response = getTableResponse(selectedTable);
       if (selectedSkills.includes(index)) {
@@ -1030,6 +1053,7 @@
         selectedSkills.push(index);
       }
       response.skills = [...selectedSkills];
+      saveState();
       renderSkills();
     });
 
@@ -1150,7 +1174,13 @@
       if (playerWaitingStep && unlockedStep >= playerWaitingStep + 1) {
         visibleStep = Math.min(4, playerWaitingStep + 1);
         playerWaitingStep = 0;
+        manualStepNavigation = false;
         saveState();
+      }
+      const currentProgress = tableProgress[selectedTable] || 0;
+      const latestAvailableStep = getPlayerMaxStep();
+      if (!manualStepNavigation && currentProgress > 0 && visibleStep === currentProgress && currentProgress < latestAvailableStep) {
+        visibleStep = latestAvailableStep;
       }
       updatePlayerAvailability();
       feedback.classList.add("hidden");
@@ -1160,18 +1190,12 @@
         document.querySelector("#introScreen").classList.remove("hidden");
         return;
       }
-      if (playerWaitingStep) {
-        document.querySelector("#playerActions").classList.remove("hidden");
-        document.querySelector("#previousPlayerStep").disabled = false;
-        document.querySelector("#nextPlayerStep").disabled = true;
-        document.querySelector("#waitingText").textContent = `Votre réponse à l'étape ${playerWaitingStep} est enregistrée. Attendez que le maître du jeu débloque ${steps[playerWaitingStep]}.`;
-        document.querySelector("#waitingScreen").classList.remove("hidden");
-        return;
-      }
+      const maxStep = getPlayerMaxStep();
+      visibleStep = Math.min(Math.max(1, visibleStep), maxStep);
       const response = getTableResponse(selectedTable);
       document.querySelector("#playerActions").classList.remove("hidden");
       document.querySelector("#previousPlayerStep").disabled = visibleStep <= 1;
-      document.querySelector("#nextPlayerStep").disabled = visibleStep >= getPlayerMaxStep();
+      document.querySelector("#nextPlayerStep").disabled = visibleStep >= maxStep;
       document.querySelector("#step1Custom").value = response.customStep1;
       renderPlanOptions(response);
       document.querySelector("#step3Text").value = response.customPlan || "";
@@ -1184,29 +1208,17 @@
 
     function startPlayer() {
       playerWaitingStep = 0;
-      visibleStep = Math.max(1, getPlayerMaxStep());
+      manualStepNavigation = false;
+      visibleStep = getPlayerEntryStep();
       render();
     }
 
     function validatePlayerStep(step) {
       playerWaitingStep = 0;
+      manualStepNavigation = false;
       const response = getTableResponse(selectedTable);
-      const progress = tableProgress[selectedTable] || 0;
+      const previousProgress = tableProgress[selectedTable] || 0;
       const nextStep = step + 1;
-      if (progress >= step && step < 4) {
-        if (unlockedStep >= nextStep) {
-          visibleStep = nextStep;
-          playerWaitingStep = 0;
-          saveState();
-          render();
-          return showPlayerFeedback(`Réponse déjà validée. Étape ${nextStep} disponible.`);
-        }
-        visibleStep = step;
-        playerWaitingStep = step;
-        saveState();
-        render();
-        return showPlayerFeedback(`Réponse déjà validée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
-      }
       if (step === 1) {
         const selectedText = document.querySelector("#step1 .option.selected span:last-child")?.textContent.trim();
         const customText = document.querySelector("#step1Custom").value.trim();
@@ -1224,19 +1236,26 @@
         response.plan = response.customPlan || selectedPlan || "";
         if (!response.plan) return showPlayerFeedback("Choisissez un plan ou écrivez votre plan avant de valider.");
       }
-      tableProgress[selectedTable] = Math.max(tableProgress[selectedTable], step);
+      tableProgress[selectedTable] = Math.max(previousProgress, step);
       saveState();
-      if (unlockedStep >= nextStep) {
+
+      if (previousProgress > step) {
+        visibleStep = step;
+        render();
+        return showPlayerFeedback("Réponse mise à jour.");
+      }
+
+      if (step < 4 && unlockedStep >= nextStep) {
         visibleStep = nextStep;
         playerWaitingStep = 0;
-        showPlayerFeedback(`Réponse enregistrée. Étape ${nextStep} disponible.`);
+        render();
+        return showPlayerFeedback(`Réponse enregistrée. Étape ${nextStep} disponible.`);
       } else {
         visibleStep = step;
         playerWaitingStep = step;
-        showPlayerFeedback(`Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
+        render();
+        return showPlayerFeedback(`Réponse enregistrée. En attente du maître du jeu pour débloquer l’étape ${nextStep}.`);
       }
-      render();
-      document.querySelector("#playerFeedback").classList.remove("hidden");
     }
 
     function updateValidationButtons() {
@@ -1246,29 +1265,30 @@
         2: "Valider les compétences →",
         3: "Envoyer la réponse ✈"
       };
+      const updateLabels = {
+        1: "Mettre à jour la réponse",
+        2: "Mettre à jour les compétences",
+        3: "Mettre à jour le plan"
+      };
       [1, 2, 3].forEach((step) => {
         const button = document.querySelector(`#validateStep${step}`);
         if (!button) return;
         const completed = progress >= step;
-        const waitingNextStep = completed && unlockedStep < step + 1;
+        const waitingNextStep = completed && step === progress && unlockedStep < step + 1;
         if (waitingNextStep) {
           button.disabled = true;
           button.textContent = "En attente du maître du jeu";
           return;
         }
-        if (completed) {
-          button.disabled = true;
-          button.textContent = "Réponse déjà validée";
-          return;
-        }
-        button.textContent = labels[step];
+        button.textContent = completed ? updateLabels[step] : labels[step];
         button.disabled = step === 2 ? selectedSkills.length !== 3 : false;
       });
-      document.querySelector("#step1Custom").disabled = progress >= 1;
-      document.querySelector("#step3Text").disabled = progress >= 3;
+      document.querySelector("#step1Custom").disabled = false;
+      document.querySelector("#step3Text").disabled = false;
     }
 
     function previousPlayerStep() {
+      manualStepNavigation = true;
       if (playerWaitingStep) {
         visibleStep = playerWaitingStep;
         playerWaitingStep = 0;
@@ -1280,6 +1300,7 @@
 
     function nextPlayerStep() {
       playerWaitingStep = 0;
+      manualStepNavigation = false;
       visibleStep = Math.min(getPlayerMaxStep(), visibleStep + 1);
       render();
     }
@@ -1292,13 +1313,14 @@
           <div class="caption">
             <span class="tag">${card.kind}</span>
             <h3>${card.name}</h3>
+            <p>${card.description}</p>
           </div>
         </article>`).join("");
       const chips = selectedSkills.map((index) => `<span class="chip">${skillCards[index]?.name || ""}</span>`).join("");
       document.querySelector("#selectedCount").textContent = selectedSkills.length;
       document.querySelector("#selectedChips").innerHTML = chips;
       document.querySelector("#planChips").innerHTML = chips;
-      document.querySelector("#validateStep2").disabled = selectedSkills.length !== 3;
+      updateValidationButtons();
     }
 
     function getPlanOptions(response) {
@@ -1355,6 +1377,11 @@
       return Math.max(1, Math.min(unlockedStep || 1, (tableProgress[selectedTable] || 0) + 1));
     }
 
+    function getPlayerEntryStep() {
+      const progress = tableProgress[selectedTable] || 0;
+      return Math.max(1, Math.min(getPlayerMaxStep(), progress + 1));
+    }
+
     function getTableResponse(index) {
       if (!tableResponses[index]) tableResponses[index] = emptyResponse();
       return tableResponses[index];
@@ -1402,6 +1429,7 @@
       const found = tables.findIndex((name) => name === tableName);
       selectedTable = found >= 0 ? found : 0;
       visibleStep = 0;
+      manualStepNavigation = false;
       switchMode("player");
     }
 
